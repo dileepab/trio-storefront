@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-label="Happy Buy">
+  
+  <circle class="hb-dot" cx="36" cy="40" r="22"></circle>
+  <text x="68" y="54" class="hb-mark hb-text">Happy</text>
+  <text x="195" y="54" class="hb-mark hb-text-2">Buy</text>
+</svg>

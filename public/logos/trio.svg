@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-label="Trio Brands">
+  
+  <g transform="translate(20,30)">
+    <circle cx="6" cy="10" r="6" fill="#FF5B2E"></circle>
+    <circle cx="22" cy="10" r="6" fill="#B8893E"></circle>
+    <circle cx="38" cy="10" r="6" fill="#E8B5A8"></circle>
+  </g>
+  <text x="80" y="50" class="tb-mark tb-text">Trio<tspan class="tb-light"> Brands</tspan></text>
+</svg>
