@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import ChatFAB from '@/components/ChatFAB';
 import CartDrawer from '@/components/CartDrawer';
 import { CartProvider } from '@/lib/cartContext';
+import { AuthProvider } from '@/lib/authContext';
 import { I18nProvider } from '@/lib/i18n';
 
 export async function generateStaticParams() {
@@ -21,15 +22,17 @@ export default function BrandLayout({ children, params }) {
   if (!brand) notFound();
   return (
     <I18nProvider>
-      <CartProvider>
-        <div data-brand={brand.id} className="brand-root">
-          <Header brand={brand}/>
-          {children}
-          <Footer brand={brand}/>
-          <ChatFAB brand={brand}/>
-          <CartDrawer brand={brand}/>
-        </div>
-      </CartProvider>
+      <AuthProvider brandId={brand.id}>
+        <CartProvider brandId={brand.id}>
+          <div data-brand={brand.id} className="brand-root">
+            <Header brand={brand}/>
+            {children}
+            <Footer brand={brand}/>
+            <ChatFAB brand={brand}/>
+            <CartDrawer brand={brand}/>
+          </div>
+        </CartProvider>
+      </AuthProvider>
     </I18nProvider>
   );
 }

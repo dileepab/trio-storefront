@@ -20,6 +20,19 @@ PLATFORM_API_BASE_URL=https://app.deez.lk npm run dev
 For local testing, run the platform app first and use its local URL, for example
 `PLATFORM_API_BASE_URL=http://127.0.0.1:3000`.
 
+## Domain Routing
+
+Deploy one Vercel project and attach all three custom domains:
+
+| Domain | Storefront |
+|---|---|
+| `happybuyfashion.com` | Happy Buy |
+| `lovemodabella.com` | Modabella |
+| `cleopatraforever.com` | Cleopatra |
+
+The middleware rewrites each domain to its internal brand route, so
+`https://happybuyfashion.com/shop` serves the same experience as `/happybuy/shop`.
+
 ## Routes
 
 | Path | Page |

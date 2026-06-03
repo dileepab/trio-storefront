@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Icon from './Icon';
+import { useAuth } from '@/lib/authContext';
 
 function getOrCreateSenderId() {
   const key = 'trio_storefront_chat_sender_id';
@@ -29,20 +30,63 @@ function greeting(brandName) {
 export default function ChatFAB({ brand }) {
   const brandId = brand?.id || 'happybuy';
   const brandName = brand?.name || 'Happy Buy';
+  const { currentUser, isHydrated: authHydrated } = useAuth();
+  
+  const formatText = (text) => {
+    return brandId === 'modabella' ? text.toLowerCase() : text;
+  };
+
   const [open, setOpen] = useState(false);
   const [senderId, setSenderId] = useState(null);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [messages, setMessages] = useState(() => [
-    {
-      id: 'hello',
-      role: 'assistant',
-      text: greeting(brandName),
-    },
-  ]);
+  
+  const defaultGreeting = useMemo(() => [{
+    id: 'hello',
+    role: 'assistant',
+    text: greeting(brandName),
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  }], [brandName]);
+
+  const [messages, setMessages] = useState([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [activePreviewImageUrl, setActivePreviewImageUrl] = useState(null);
   const bodyRef = useRef(null);
 
   const canSend = input.trim().length > 0 && !sending;
+
+  // Resolve persistent history key based on login status and brand ID
+  const historyKey = useMemo(() => {
+    const userId = currentUser ? currentUser.id : 'guest';
+    return `trio_chat_history_${brandId}_${userId}`;
+  }, [currentUser, brandId]);
+
+  // Load persistent history on mount or when user session changes
+  useEffect(() => {
+    try {
+      const storedHistory = localStorage.getItem(historyKey);
+      if (storedHistory) {
+        setMessages(JSON.parse(storedHistory));
+      } else {
+        setMessages(defaultGreeting);
+      }
+      setHistoryLoaded(true);
+    } catch (e) {
+      console.error('Failed to load chat history:', e);
+      setMessages(defaultGreeting);
+    }
+  }, [historyKey, defaultGreeting]);
+
+  // Save history when messages update
+  useEffect(() => {
+    if (historyLoaded && messages.length > 0) {
+      try {
+        localStorage.setItem(historyKey, JSON.stringify(messages));
+      } catch (e) {
+        console.error('Failed to save chat history:', e);
+      }
+    }
+  }, [messages, historyKey, historyLoaded]);
 
   useEffect(() => {
     setSenderId(getOrCreateSenderId());
@@ -74,9 +118,10 @@ export default function ChatFAB({ brand }) {
 
     setInput('');
     setSending(true);
+    const messageTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setMessages((prev) => [
       ...prev,
-      { id: `user-${Date.now()}`, role: 'user', text },
+      { id: `user-${Date.now()}`, role: 'user', text, time: messageTime },
     ]);
 
     try {
@@ -96,6 +141,7 @@ export default function ChatFAB({ brand }) {
         throw new Error(payload.error || 'Chat failed.');
       }
 
+      const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       if (payload.reply || payload.imageUrl || payload.imageUrls?.length || payload.carouselProducts?.length) {
         setMessages((prev) => [
           ...prev,
@@ -105,6 +151,7 @@ export default function ChatFAB({ brand }) {
             text: payload.reply || '',
             imageUrls: payload.imageUrls || (payload.imageUrl ? [payload.imageUrl] : []),
             carouselProducts: payload.carouselProducts || [],
+            time: replyTime,
           },
         ]);
       } else if (payload.silentReason) {
@@ -114,16 +161,19 @@ export default function ChatFAB({ brand }) {
             id: `support-${Date.now()}`,
             role: 'assistant',
             text: 'Our support team has picked up this conversation. Please wait for a team reply.',
+            time: replyTime,
           },
         ]);
       }
     } catch {
+      const errorTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       setMessages((prev) => [
         ...prev,
         {
           id: `error-${Date.now()}`,
           role: 'assistant',
           text: 'Sorry, I could not reach the chat assistant right now. Please try again.',
+          time: errorTime,
         },
       ]);
     } finally {
@@ -150,36 +200,83 @@ export default function ChatFAB({ brand }) {
       </div>
       <div className="chat-body" ref={bodyRef}>
         {messages.map((message) => (
-          <div key={message.id} className={`chat-bub ${message.role === 'user' ? 'out' : 'in'}`}>
-            {message.text && <div>{message.text}</div>}
-            {message.imageUrls?.length > 0 && (
-              <div className="chat-media-grid">
-                {message.imageUrls.map((imageUrl) => (
-                  <img key={imageUrl} src={imageUrl} alt="Chat attachment" className="chat-media"/>
-                ))}
-              </div>
-            )}
-            {message.carouselProducts?.length > 0 && (
-              <div className="chat-product-list">
-                {message.carouselProducts.slice(0, 4).map((product) => (
-                  <div key={product.id} className="chat-product">
-                    {product.imageUrl && <img src={product.imageUrl} alt={product.name}/>}
-                    <div>
-                      <div className="chat-product-name">{product.name}</div>
-                      <div className="caption">LKR {Number(product.price).toLocaleString('en-LK')}</div>
-                      <div className="caption">Sizes {product.sizes || '-'}</div>
+          <div 
+            key={message.id} 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              width: '100%', 
+              alignItems: message.role === 'user' ? 'flex-end' : 'flex-start',
+              margin: '2px 0'
+            }}
+          >
+            <div className={`chat-bub ${message.role === 'user' ? 'out' : 'in'}`}>
+              {message.text && <div>{formatText(message.text)}</div>}
+              {message.imageUrls?.length > 0 && (
+                <div className="chat-media-grid">
+                  {message.imageUrls.map((imageUrl) => (
+                    <div 
+                      key={imageUrl} 
+                      onClick={() => setActivePreviewImageUrl(imageUrl)} 
+                      title="Click to zoom size chart" 
+                      style={{ cursor: 'zoom-in', display: 'block' }}
+                    >
+                      <img src={imageUrl} alt="Chat attachment" className="chat-media" style={{ display: 'block' }}/>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+              {message.carouselProducts?.length > 0 && (
+                <div className="chat-product-list">
+                  {message.carouselProducts.slice(0, 4).map((product) => (
+                    <div key={product.id} className="chat-product">
+                      {product.imageUrl && <img src={product.imageUrl} alt={product.name}/>}
+                      <div>
+                        <div className="chat-product-name">{product.name}</div>
+                        <div className="caption">LKR {Number(product.price).toLocaleString('en-LK')}</div>
+                        <div className="caption">Sizes {product.sizes || '-'}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {message.time && (
+              <span 
+                className="chat-time" 
+                style={{ 
+                  fontSize: '9px', 
+                  color: 'var(--brand-muted)', 
+                  opacity: 0.75,
+                  marginTop: '2px', 
+                  padding: '0 4px', 
+                  alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start' 
+                }}
+              >
+                {message.time}
+              </span>
             )}
           </div>
         ))}
-        {sending && <div className="chat-bub in chat-typing">Typing...</div>}
-      </div>
-      <div className="chat-deeplinks">
-        <Link className="chat-deep fb" href={`https://m.me/${brandId}`} target="_blank">Messenger</Link>
-        <Link className="chat-deep wa" href={`https://wa.me/94701234567?text=${deeplinkText}`} target="_blank">WhatsApp</Link>
+        {sending && (
+          <div 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              width: '100%', 
+              alignItems: 'flex-start',
+              margin: '2px 0' 
+            }}
+          >
+            <div className="chat-bub in chat-typing">
+              <div className="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <form className="chat-input" onSubmit={sendMessage}>
         <input
@@ -190,6 +287,61 @@ export default function ChatFAB({ brand }) {
         />
         <button className="chat-send" aria-label="Send" disabled={!canSend}>→</button>
       </form>
+
+      {/* Image Preview Backdrop Modal */}
+      {activePreviewImageUrl && (
+        <div 
+          className="auth-overlay" 
+          onClick={() => setActivePreviewImageUrl(null)} 
+          style={{ zIndex: 110, padding: '20px' }}
+        >
+          <div 
+            style={{ 
+              position: 'relative', 
+              maxWidth: '90%', 
+              maxHeight: '90%', 
+              background: 'var(--brand-surface)', 
+              borderRadius: 'var(--radius-lg)', 
+              padding: '8px', 
+              boxShadow: 'var(--shadow-lift)',
+              border: '1px solid var(--brand-border-subtle)',
+              animation: 'scaleIn 0.3s var(--ease-out) forwards',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setActivePreviewImageUrl(null)} 
+              style={{ 
+                position: 'absolute', top: '-16px', right: '-16px', 
+                width: '32px', height: '32px', borderRadius: '50%', 
+                background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)', 
+                border: 0, fontSize: '20px', display: 'flex', alignItems: 'center', 
+                justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' 
+              }}
+              aria-label="Close preview"
+            >
+              ×
+            </button>
+            <img 
+              src={activePreviewImageUrl} 
+              alt="Size chart preview" 
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '80vh', 
+                borderRadius: 'var(--radius)', 
+                objectFit: 'contain',
+                display: 'block'
+              }} 
+            />
+            <div className="caption" style={{ marginTop: '8px', fontWeight: '500', color: 'var(--brand-muted)' }}>
+              {formatText('Click anywhere to close')}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,12 +1,34 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
+import { useAuth } from '@/lib/authContext';
 import { useI18n } from '@/lib/i18n';
+import AuthModal from './AuthModal';
+import ProfileDashboard from './ProfileDashboard';
 
 export default function Header({ brand }) {
   const { cartCount, openCart, justAddedId } = useCart();
+  const { currentUser } = useAuth();
   const { locale, t, changeLocale } = useI18n();
+
+  const [authOpen, setAuthOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const handleAccountClick = () => {
+    if (currentUser) {
+      setProfileOpen(true);
+    } else {
+      setAuthOpen(true);
+    }
+  };
+
+  const isModa = brand.id === 'modabella';
+
+  const formatText = (text) => {
+    return isModa ? text.toLowerCase() : text;
+  };
 
   return (
     <header className="sf-header">
@@ -40,7 +62,22 @@ export default function Header({ brand }) {
         </select>
 
         <button className="icon-btn" aria-label="Search"><Icon name="search"/></button>
-        <button className="icon-btn sf-desktop-only" aria-label="Account"><Icon name="user"/></button>
+        
+        {/* Account Button with dynamic username label */}
+        <button 
+          className="icon-btn" 
+          aria-label="Account"
+          onClick={handleAccountClick}
+          style={{ display: 'inline-flex', gap: '6px', width: 'auto', padding: '0 10px' }}
+        >
+          {currentUser && (
+            <span className="caption sf-desktop-only" style={{ fontWeight: '600', color: 'var(--brand-primary)' }}>
+              {formatText(currentUser.name)}
+            </span>
+          )}
+          <Icon name="user"/>
+        </button>
+
         <button 
           onClick={openCart} 
           className="icon-btn cart-btn" 
@@ -54,6 +91,21 @@ export default function Header({ brand }) {
           )}
         </button>
       </div>
+
+      {/* Persistent Modals */}
+      <AuthModal 
+        isOpen={authOpen} 
+        onClose={() => setAuthOpen(false)} 
+        brandId={brand.id}
+      />
+      
+      {currentUser && (
+        <ProfileDashboard 
+          isOpen={profileOpen} 
+          onClose={() => setProfileOpen(false)} 
+          brandId={brand.id}
+        />
+      )}
     </header>
   );
 }

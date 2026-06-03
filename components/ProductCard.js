@@ -4,7 +4,7 @@ import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
 
 export default function ProductCard({ brand, slug, title, price, was, tag, swatchA, swatchB, eyebrow, rating, image }) {
-  const { toggleFavorite, isFavorite } = useCart();
+  const { toggleFavorite, isFavorite, addToCart } = useCart();
   const favorited = isFavorite(slug);
 
   const formatText = (text) => {
@@ -18,7 +18,7 @@ export default function ProductCard({ brand, slug, title, price, was, tag, swatc
           <img 
             src={image} 
             alt={title} 
-            className="object-cover w-full h-full" 
+            className="p-card-img" 
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transition: 'transform var(--dur-slow) var(--ease-out)' }} 
           />
         )}
@@ -35,6 +35,33 @@ export default function ProductCard({ brand, slug, title, price, was, tag, swatc
         >
           <Icon name="heart" size={16} fill={favorited ? 'var(--brand-primary)' : 'none'}/>
         </button>
+
+        {/* Quick Add Overlay */}
+        <div className="p-quick-add">
+          <div className="p-quick-add-title">{formatText('Quick Add')}</div>
+          <div className="p-quick-add-sizes">
+            {['S', 'M', 'L'].map(size => (
+              <button 
+                key={size}
+                className="p-quick-add-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  addToCart({
+                    slug,
+                    title,
+                    price,
+                    swatchA,
+                    swatchB,
+                    image
+                  }, size);
+                }}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="p-body">
         {eyebrow && <div className="eyebrow p-eyebrow">{formatText(eyebrow)}</div>}
