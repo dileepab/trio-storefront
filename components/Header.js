@@ -16,6 +16,7 @@ export default function Header({ brand, basePath }) {
 
   const [authOpen, setAuthOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleAccountClick = () => {
     if (currentUser) {
@@ -33,12 +34,18 @@ export default function Header({ brand, basePath }) {
 
   return (
     <header className="sf-header">
-      <button className="icon-btn sf-mobile-only" aria-label="Menu"><Icon name="menu"/></button>
+      <button 
+        className="icon-btn sf-mobile-only" 
+        aria-label="Menu" 
+        onClick={() => setMobileMenuOpen(true)}
+      >
+        <Icon name="menu"/>
+      </button>
       <Link href={storefrontHref(basePath)} className="sf-logo">
         <img src={`/logos/${brand.id}.svg`} alt={brand.name}/>
       </Link>
       
-      <nav className="sf-nav sf-desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <nav className="sf-nav sf-desktop-only">
         {/* Lookbook active tag */}
         <Link href={storefrontHref(basePath, '/lookbook')} style={{ fontWeight: '600', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
           ✨ {t('Shop the Look', brand.id)}
@@ -50,11 +57,11 @@ export default function Header({ brand, basePath }) {
       </nav>
 
       <div className="sf-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Language Picker Dropdown */}
+        {/* Language Picker Dropdown (Desktop Only in Header) */}
         <select 
           value={locale} 
           onChange={(e) => changeLocale(e.target.value)} 
-          className="lang-picker"
+          className="lang-picker sf-desktop-only"
           aria-label="Select language"
         >
           <option value="en">EN</option>
@@ -92,6 +99,88 @@ export default function Header({ brand, basePath }) {
           )}
         </button>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="mobile-drawer-overlay" onClick={() => setMobileMenuOpen(false)}>
+          <div className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-drawer-head">
+              <span className="eyebrow" style={{ fontSize: '14px', letterSpacing: '0.1em' }}>
+                {formatText(brand.name)}
+              </span>
+              <button 
+                className="mobile-drawer-close" 
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="mobile-drawer-body">
+              {/* Language Selector */}
+              <div className="mobile-drawer-section">
+                <label className="caption" style={{ marginBottom: '8px', display: 'block', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {formatText('Select Language')}
+                </label>
+                <select 
+                  value={locale} 
+                  onChange={(e) => {
+                    changeLocale(e.target.value);
+                    setMobileMenuOpen(false);
+                  }} 
+                  className="lang-picker"
+                  style={{ width: '100%', height: '40px', fontSize: '13px' }}
+                >
+                  <option value="en">English (EN)</option>
+                  <option value="si">සිංහල (Sinhala)</option>
+                  <option value="ta">தமிழ் (Tamil)</option>
+                </select>
+              </div>
+
+              {/* Navigation Links */}
+              <div className="mobile-drawer-section" style={{ marginTop: '16px' }}>
+                <label className="caption" style={{ marginBottom: '12px', display: 'block', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {formatText('Categories')}
+                </label>
+                <nav className="mobile-drawer-nav">
+                  <Link 
+                    href={storefrontHref(basePath, '/lookbook')} 
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ fontWeight: '600', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', gap: '6px', padding: '12px 0', borderBottom: '1px solid var(--brand-border-subtle)' }}
+                  >
+                    ✨ {t('Shop the Look', brand.id)}
+                  </Link>
+                  {brand.nav.map(n => (
+                    <Link 
+                      key={n} 
+                      href={storefrontHref(basePath, '/shop')}
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={{ display: 'block', padding: '12px 0', borderBottom: '1px solid var(--brand-border-subtle)', color: 'var(--brand-text)' }}
+                    >
+                      {t(n, brand.id)}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Account Link */}
+              <div className="mobile-drawer-section" style={{ marginTop: 'auto', borderTop: '1px solid var(--brand-border-subtle)', paddingTop: '20px' }}>
+                <button 
+                  className="btn primary lg full"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleAccountClick();
+                  }}
+                >
+                  <Icon name="user" size={16}/>
+                  {currentUser ? formatText(currentUser.name) : formatText('My Account')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Persistent Modals */}
       <AuthModal 
