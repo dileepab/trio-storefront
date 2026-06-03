@@ -35,7 +35,7 @@ function matchesColor(item, activeColor) {
   return colorGroup(item.swatchA) === activeColor || colorGroup(item.swatchB) === activeColor;
 }
 
-export default function ShopPageClient({ brand, products }) {
+export default function ShopPageClient({ brand, products, basePath }) {
   const { t } = useI18n();
   const [activeSize, setActiveSize] = useState(null);
   const [activeColor, setActiveColor] = useState(null);
@@ -144,7 +144,7 @@ export default function ShopPageClient({ brand, products }) {
       ) : (
         <div className="plp-grid" style={{ transition: 'opacity 0.2s ease-in-out' }}>
           {sortedAndFilteredItems.map((p) => (
-            <ProductCard key={p.slug} brand={brand.id} {...p}/>
+            <ProductCard key={p.slug} brand={brand.id} basePath={basePath} {...p}/>
           ))}
         </div>
       )}

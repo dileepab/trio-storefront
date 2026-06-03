@@ -3,6 +3,8 @@ import { getProduct } from '@/lib/products';
 import { notFound } from 'next/navigation';
 import PDP from '@/components/PDP';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateStaticParams() {
   // optional — enables build-time generation
   return [];

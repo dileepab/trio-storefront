@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { useCart } from '@/lib/cartContext';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
+import { storefrontHref } from '@/lib/storefrontRouting';
 
-export default function LookbookPageClient({ brand, products }) {
+export default function LookbookPageClient({ brand, products, basePath }) {
   const { t } = useI18n();
   const { addToCart } = useCart();
   const [activeHotspot, setActiveHotspot] = useState(false);
@@ -87,7 +88,7 @@ export default function LookbookPageClient({ brand, products }) {
                 >
                   {t('Add to cart', brand.id)}
                 </button>
-                <Link href={`/${brand.id}/p/${featuredProduct.slug}`} className="lookbook-pop-link caption text-center" style={{ display: 'block', marginTop: '8px', textDecoration: 'underline' }}>
+                <Link href={storefrontHref(basePath, `/p/${featuredProduct.slug}`)} className="lookbook-pop-link caption text-center" style={{ display: 'block', marginTop: '8px', textDecoration: 'underline' }}>
                   {t('Go back to shop', brand.id)}
                 </Link>
               </div>

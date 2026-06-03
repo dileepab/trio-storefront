@@ -2,8 +2,9 @@
 import Link from 'next/link';
 import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
+import { storefrontHref } from '@/lib/storefrontRouting';
 
-export default function ProductCard({ brand, slug, title, price, was, tag, swatchA, swatchB, eyebrow, rating, image }) {
+export default function ProductCard({ brand, basePath, slug, title, price, was, tag, swatchA, swatchB, eyebrow, rating, image }) {
   const { toggleFavorite, isFavorite, addToCart } = useCart();
   const favorited = isFavorite(slug);
 
@@ -12,7 +13,7 @@ export default function ProductCard({ brand, slug, title, price, was, tag, swatc
   };
 
   return (
-    <Link href={`/${brand}/p/${slug}`} className={`p-card p-card--${brand}`}>
+    <Link href={storefrontHref(basePath, `/p/${slug}`)} className={`p-card p-card--${brand}`}>
       <div className="p-img" style={{ background: image ? 'var(--brand-surface-2)' : `linear-gradient(160deg, ${swatchA} 0%, ${swatchB} 100%)` }}>
         {image && (
           <img 

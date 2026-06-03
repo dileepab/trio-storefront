@@ -1,19 +1,10 @@
 import { NextResponse } from 'next/server';
-
-const DOMAIN_BRANDS = {
-  'happybuyfashion.com': 'happybuy',
-  'www.happybuyfashion.com': 'happybuy',
-  'lovemodabella.com': 'modabella',
-  'www.lovemodabella.com': 'modabella',
-  'cleopatraforever.com': 'cleopatra',
-  'www.cleopatraforever.com': 'cleopatra',
-};
+import { getBrandForHost } from './lib/storefrontRouting';
 
 const PUBLIC_FILE = /\.(.*)$/;
 
 export function middleware(request) {
-  const host = request.headers.get('host')?.split(':')[0]?.toLowerCase();
-  const brand = host ? DOMAIN_BRANDS[host] : null;
+  const brand = getBrandForHost(request.headers.get('host'));
 
   if (!brand) {
     return NextResponse.next();
@@ -34,7 +25,9 @@ export function middleware(request) {
   }
 
   if (pathname === `/${brand}` || pathname.startsWith(`/${brand}/`)) {
-    return NextResponse.next();
+    const url = request.nextUrl.clone();
+    url.pathname = pathname === `/${brand}` ? '/' : pathname.slice(brand.length + 1);
+    return NextResponse.redirect(url, 308);
   }
 
   const url = request.nextUrl.clone();

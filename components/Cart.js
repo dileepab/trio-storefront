@@ -1,8 +1,9 @@
 'use client';
 import { useCart } from '@/lib/cartContext';
 import Link from 'next/link';
+import { storefrontHref } from '@/lib/storefrontRouting';
 
-export default function Cart({ brand }) {
+export default function Cart({ brand, basePath }) {
   const { cartItems, updateQty, removeFromCart } = useCart();
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
@@ -21,7 +22,7 @@ export default function Cart({ brand }) {
       <div className="cart text-center" style={{ padding: '80px 18px' }}>
         <h1 className="h1 cart-title">{formatText('Your bag is empty')}</h1>
         <p className="body" style={{ margin: '20px 0 32px' }}>{formatText('There are no items in your shopping bag.')}</p>
-        <Link href={`/${brand}`} className="btn primary lg">
+        <Link href={storefrontHref(basePath, '/shop')} className="btn primary lg">
           {formatText('Go back to shop')}
         </Link>
       </div>

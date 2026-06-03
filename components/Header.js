@@ -5,10 +5,11 @@ import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
 import { useAuth } from '@/lib/authContext';
 import { useI18n } from '@/lib/i18n';
+import { storefrontHref } from '@/lib/storefrontRouting';
 import AuthModal from './AuthModal';
 import ProfileDashboard from './ProfileDashboard';
 
-export default function Header({ brand }) {
+export default function Header({ brand, basePath }) {
   const { cartCount, openCart, justAddedId } = useCart();
   const { currentUser } = useAuth();
   const { locale, t, changeLocale } = useI18n();
@@ -33,18 +34,18 @@ export default function Header({ brand }) {
   return (
     <header className="sf-header">
       <button className="icon-btn sf-mobile-only" aria-label="Menu"><Icon name="menu"/></button>
-      <Link href={`/${brand.id}`} className="sf-logo">
+      <Link href={storefrontHref(basePath)} className="sf-logo">
         <img src={`/logos/${brand.id}.svg`} alt={brand.name}/>
       </Link>
       
       <nav className="sf-nav sf-desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         {/* Lookbook active tag */}
-        <Link href={`/${brand.id}/lookbook`} style={{ fontWeight: '600', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <Link href={storefrontHref(basePath, '/lookbook')} style={{ fontWeight: '600', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
           ✨ {t('Shop the Look', brand.id)}
         </Link>
         <span style={{ color: 'var(--brand-border)' }}>|</span>
         {brand.nav.map(n => (
-          <Link key={n} href={`/${brand.id}/shop`}>{t(n, brand.id)}</Link>
+          <Link key={n} href={storefrontHref(basePath, '/shop')}>{t(n, brand.id)}</Link>
         ))}
       </nav>
 
