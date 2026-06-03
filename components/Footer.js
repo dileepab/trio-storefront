@@ -7,7 +7,7 @@ export default function Footer({ brand }) {
     <footer className="sf-footer">
       <div className="sf-footer-inner">
         <div>
-          <img src={`/logos/${brand.id}.svg`} alt={brand.name} className="sf-footer-logo"/>
+          <img src={brand.logo} alt={brand.name} className="sf-footer-logo"/>
           <p className="caption">
             {brand.id === 'happybuy' && "Sri Lanka's value fashion store. COD island-wide."}
             {brand.id === 'cleopatra' && 'Hand-finished bridal & heritage wear, made in Kandy.'}

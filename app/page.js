@@ -16,7 +16,7 @@ export default function Index() {
             return (
               <Link key={slug} href={`/${slug}`} className={`trio-card trio-card--${slug}`} data-brand={slug}>
                 <div className="trio-card-mark">
-                  <img src={`/logos/${slug}.svg`} alt={b.name}/>
+                  <img src={b.logo} alt={b.name}/>
                 </div>
                 <div className="trio-card-name">{b.name}</div>
                 <div className="trio-card-domain">{b.domain}</div>

@@ -42,7 +42,7 @@ export default function Header({ brand, basePath }) {
         <Icon name="menu"/>
       </button>
       <Link href={storefrontHref(basePath)} className="sf-logo">
-        <img src={`/logos/${brand.id}.svg`} alt={brand.name}/>
+        <img src={brand.logo} alt={brand.name}/>
       </Link>
       
       <nav className="sf-nav sf-desktop-only">
