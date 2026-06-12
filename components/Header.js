@@ -105,9 +105,15 @@ export default function Header({ brand, basePath }) {
         <div className="mobile-drawer-overlay" onClick={() => setMobileMenuOpen(false)}>
           <div className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="mobile-drawer-head">
-              <span className="eyebrow" style={{ fontSize: '14px', letterSpacing: '0.1em' }}>
-                {formatText(brand.name)}
-              </span>
+              {brand.logo ? (
+                <div className="mobile-drawer-logo">
+                  <img src={brand.logo} alt={brand.name} />
+                </div>
+              ) : (
+                <span className="eyebrow" style={{ fontSize: '14px', letterSpacing: '0.1em' }}>
+                  {formatText(brand.name)}
+                </span>
+              )}
               <button 
                 className="mobile-drawer-close" 
                 onClick={() => setMobileMenuOpen(false)}

@@ -36,6 +36,32 @@ export default function ChatFAB({ brand }) {
     return brandId === 'modabella' ? text.toLowerCase() : text;
   };
 
+  const renderMessageText = (text) => {
+    const formatted = formatText(text);
+    if (!formatted) return null;
+    
+    const lines = formatted.split('\n');
+    return lines.map((line, index) => {
+      const match = line.match(/^([A-Za-z\s/]+:)(.*)$/);
+      if (match) {
+        const [, label, value] = match;
+        return (
+          <div key={index} style={{ margin: '2px 0' }}>
+            <span style={{ fontWeight: '600', opacity: 0.95 }}>{label}</span>{value}
+          </div>
+        );
+      }
+      if (line.trim().toLowerCase() === 'order summary') {
+        return (
+          <div key={index} style={{ fontWeight: '700', fontSize: '14.5px', borderBottom: '1.5px solid var(--brand-border-subtle)', paddingBottom: '6px', marginBottom: '8px', textTransform: brandId === 'modabella' ? 'lowercase' : 'uppercase', letterSpacing: '0.05em' }}>
+            📋 {line}
+          </div>
+        );
+      }
+      return <div key={index} style={{ marginTop: line.trim() ? '4px' : '0' }}>{line}</div>;
+    });
+  };
+
   const [open, setOpen] = useState(false);
   const [senderId, setSenderId] = useState(null);
   const [input, setInput] = useState('');
@@ -211,7 +237,7 @@ export default function ChatFAB({ brand }) {
             }}
           >
             <div className={`chat-bub ${message.role === 'user' ? 'out' : 'in'}`}>
-              {message.text && <div>{formatText(message.text)}</div>}
+              {message.text && <div>{renderMessageText(message.text)}</div>}
               {message.imageUrls?.length > 0 && (
                 <div className="chat-media-grid">
                   {message.imageUrls.map((imageUrl) => (
