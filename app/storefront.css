@@ -128,7 +128,19 @@ button {
   z-index: 40;
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
-  transition: background var(--dur-base) var(--ease-out), box-shadow var(--dur-base);
+  box-shadow: 0 0 0 0 transparent;
+  transition: background var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-slow) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+/* Elevation fades in only after scrolling, so the bar feels anchored to content */
+.sf-header.is-scrolled {
+  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
+  border-bottom-color: transparent;
+  box-shadow:
+    0 1px 0 var(--brand-border-subtle),
+    0 10px 30px -16px rgba(0, 0, 0, 0.22);
 }
 
 .sf-logo {
@@ -244,6 +256,34 @@ button {
 .hero {
   color: #fff;
   padding: 56px 18px 64px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Soft directional light + base vignette give the flat gradient real depth */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 120% at 12% 0%, rgba(255, 255, 255, 0.28), transparent 46%),
+    radial-gradient(140% 120% at 100% 110%, rgba(0, 0, 0, 0.20), transparent 55%);
+  pointer-events: none;
+}
+
+/* Fine film grain — keeps large color fields from looking digitally flat */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.06;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
 }
 
 [data-brand="modabella"] .hero {
@@ -264,6 +304,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .hero-title {
@@ -302,7 +344,9 @@ button {
   align-items: center;
   gap: 8px;
   justify-content: center;
-  transition: background 150ms var(--ease-out), transform 100ms;
+  transition: background var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
 }
 
 .btn.lg {
@@ -328,10 +372,12 @@ button {
 .btn.primary:hover {
   background: var(--brand-primary-hover);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-lift);
 }
 
 .btn.primary:active {
   transform: translateY(0);
+  box-shadow: var(--shadow-cta);
 }
 
 .btn.messenger {
@@ -371,8 +417,13 @@ button {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
-  padding: 12px 14px;
-  background: var(--brand-surface-2);
+  padding: 16px 14px;
+  background: color-mix(in srgb, var(--brand-surface-2) 60%, var(--brand-surface));
+  border-block: 1px solid var(--brand-border-subtle);
+}
+
+.trust-item + .trust-item {
+  border-left: 1px solid var(--brand-border-subtle);
 }
 
 .trust-item {
@@ -486,6 +537,11 @@ button {
 
 .p-card:hover {
   box-shadow: var(--shadow-lift);
+  transform: translateY(-6px);
+}
+
+.p-card--modabella:hover {
+  box-shadow: none;
   transform: translateY(-4px);
 }
 
@@ -597,8 +653,9 @@ button {
   font-family: var(--font-display);
 }
 
-/* Apply elegant subtle pulsing shimmer by default onto product image background */
-.p-img::after {
+/* Loading shimmer — only while the gradient placeholder shows (no <img> yet).
+   Once a real product image is present, no perpetual sweep (that read as cheap). */
+.p-img:not(:has(img))::after {
   content: '';
   position: absolute;
   top: 0;
@@ -607,23 +664,46 @@ button {
   height: 100%;
   background: linear-gradient(90deg,
       transparent,
-      color-mix(in srgb, var(--brand-surface-2) 15%, transparent),
+      color-mix(in srgb, var(--brand-surface) 30%, transparent),
       transparent);
   transform: translateX(-100%);
-  animation: shimmer 2s infinite var(--ease-in-out);
+  animation: shimmer 1.8s infinite var(--ease-in-out);
   pointer-events: none;
+}
+
+/* Subtle scrim at the base of the image adds depth and seats the card body */
+.p-img::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 38%;
+  background: linear-gradient(to top,
+      color-mix(in srgb, var(--brand-text) 14%, transparent),
+      transparent);
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.p-card:hover .p-img::before {
+  opacity: 1;
 }
 
 .p-tag {
   position: absolute;
   top: 10px;
   left: 10px;
-  padding: 4px 10px;
+  padding: 5px 11px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  background: var(--brand-accent);
+  letter-spacing: 0.01em;
+  background: color-mix(in srgb, var(--brand-accent) 92%, transparent);
   color: var(--brand-text);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 2;
 }
 
@@ -641,19 +721,38 @@ button {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
+  background: color-mix(in srgb, var(--brand-surface) 88%, transparent);
   color: var(--brand-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast), color var(--dur-fast);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: transform var(--dur-base) var(--ease-out), background var(--dur-fast), color var(--dur-fast), opacity var(--dur-base) var(--ease-out);
 }
 
-.p-fav:hover {
+.p-card:hover .p-fav,
+.p-fav:focus-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Touch devices have no hover — keep the save button always visible there */
+@media (hover: none) {
+  .p-fav {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.p-card:hover .p-fav:hover {
   transform: scale(1.15);
   background: var(--brand-primary);
   color: var(--brand-text-on-primary);
@@ -858,7 +957,10 @@ button {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius);
-  background: var(--brand-surface-2);
+  background: linear-gradient(160deg,
+      var(--brand-surface) 0%,
+      var(--brand-surface-2) 100%);
+  box-shadow: inset 0 0 0 1px var(--brand-border-subtle);
 }
 
 .pdp-main-img {
@@ -945,16 +1047,28 @@ button {
   height: 44px;
   border-radius: var(--radius);
   background: var(--brand-surface);
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border);
   font-size: 13px;
   font-weight: 500;
   color: var(--brand-text);
+  transition: transform var(--dur-base) cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.size-pill:hover {
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
 }
 
 .size-pill.is-on {
   background: var(--brand-primary);
   color: var(--brand-text-on-primary);
   border-color: var(--brand-primary);
+  /* organic spring outward on selection */
+  transform: scale(1.08);
+  box-shadow: var(--shadow-cta);
 }
 
 .pdp-desc {

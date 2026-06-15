@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
@@ -17,6 +17,15 @@ export default function Header({ brand, basePath }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Elevate the header subtly once the page scrolls past the hero edge
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleAccountClick = () => {
     if (currentUser) {
@@ -33,7 +42,7 @@ export default function Header({ brand, basePath }) {
   };
 
   return (
-    <header className="sf-header">
+    <header className={`sf-header${scrolled ? ' is-scrolled' : ''}`}>
       <button 
         className="icon-btn sf-mobile-only" 
         aria-label="Menu" 
