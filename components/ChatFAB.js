@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import Icon from './Icon';
 import { useAuth } from '@/lib/authContext';
+import { usePageContext } from '@/lib/pageContext';
 
 function getOrCreateSenderId() {
   const key = 'trio_storefront_chat_sender_id';
@@ -31,6 +33,8 @@ export default function ChatFAB({ brand }) {
   const brandId = brand?.id || 'happybuy';
   const brandName = brand?.name || 'Happy Buy';
   const { currentUser, isHydrated: authHydrated } = useAuth();
+  const { activeProduct } = usePageContext();
+  const pathname = usePathname();
   
   const formatText = (text) => {
     return brandId === 'modabella' ? text.toLowerCase() : text;
@@ -159,6 +163,11 @@ export default function ChatFAB({ brand }) {
           senderId: stableSenderId,
           channel: 'web',
           brand: brandId,
+          // Page the shopper is on, so the assistant can resolve "this item".
+          pageContext: {
+            path: pathname,
+            product: activeProduct || null,
+          },
         }),
       });
       const payload = await response.json();

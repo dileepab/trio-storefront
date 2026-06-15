@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
 import { useI18n } from '@/lib/i18n';
+import { usePageContext } from '@/lib/pageContext';
 import VirtualTryOn from './VirtualTryOn';
 
 export default function PDP({ brand, product }) {
@@ -16,6 +17,26 @@ export default function PDP({ brand, product }) {
   const [vtoOpen, setVtoOpen] = useState(false);
   const { addToCart, toggleFavorite, isFavorite } = useCart();
   const { t } = useI18n();
+  const { setActiveProduct } = usePageContext();
+
+  // Publish the product the shopper is viewing so the ChatFAB can resolve
+  // references like "this item". Clears when leaving the page.
+  useEffect(() => {
+    setActiveProduct({
+      slug: product.slug,
+      title: product.title,
+      price: product.price,
+      was: product.was || null,
+      sizes: availableSizes,
+      colors: availableColors,
+      selectedSize: size,
+      stock: product.stock,
+      soldOut: isSoldOut,
+      image: product.image || null,
+    });
+    return () => setActiveProduct(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.slug, size]);
 
   return (
     <div className="pdp">
