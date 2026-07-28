@@ -1,13 +1,19 @@
 'use client';
+import { useState } from 'react';
 import { useCart } from '@/lib/cartContext';
 import Link from 'next/link';
 import { storefrontHref } from '@/lib/storefrontRouting';
+import { shippingFor } from '@/lib/shipping';
+import PayToggle from './PayToggle';
+import ShipProgress from './ShipProgress';
 
 export default function Cart({ brand, basePath }) {
   const { cartItems, updateQty, removeFromCart } = useCart();
+  const [payMethod, setPayMethod] = useState('COD');
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const delivery = subtotal > 0 ? 350 : 0;
+  const shipping = shippingFor(brand, subtotal);
+  const delivery = shipping.fee;
   const total = subtotal + delivery;
 
   const fmt = n => n.toLocaleString('en-LK');
@@ -45,14 +51,18 @@ export default function Cart({ brand, basePath }) {
             <div className="cart-info">
               <div className="cart-line-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div className="cart-name">{formatText(it.title)}</div>
-                <button 
-                  style={{ background: 'transparent', border: 0, color: 'var(--brand-muted)', cursor: 'pointer' }}
+                <button
+                  className="cart-line-remove"
                   onClick={() => removeFromCart(it.key)}
+                  aria-label={`${formatText('Remove')} ${formatText(it.title)}`}
                 >
-                  ×
+                  <span aria-hidden="true">×</span>
                 </button>
               </div>
-              <div className="caption" style={{ marginBottom: '4px' }}>{formatText('Size')}: {it.size}</div>
+              <div className="caption" style={{ marginBottom: '4px' }}>
+                {formatText('Size')}: {it.size}
+                {it.color && <> · {formatText(it.color)}</>}
+              </div>
               <div className="cart-row">
                 <div className="qty">
                   <button onClick={() => updateQty(it.key, -1)}>−</button>
@@ -66,19 +76,21 @@ export default function Cart({ brand, basePath }) {
         ))}
       </div>
       <div className="cart-summary">
+        <ShipProgress brandId={brand} subtotal={subtotal}/>
+
         <div className="row"><span>{formatText('Subtotal')}</span><span className="price">LKR {fmt(subtotal)}</span></div>
-        <div className="row"><span>{formatText('Courier (Colombo)')}</span><span>LKR {fmt(delivery)}</span></div>
+        <div className="row">
+          <span>{formatText('Courier (Colombo)')}</span>
+          {shipping.qualified
+            ? <span className="row-free">{formatText('Free')}</span>
+            : <span>LKR {fmt(delivery)}</span>}
+        </div>
         <div className="row total"><span>{formatText('Total')}</span><span className="price">LKR {fmt(total)}</span></div>
-        <label className="pay">
-          <input type="radio" name="pay" defaultChecked/> 
-          <span>{formatText('Cash on delivery')}</span>
-          <span className="caption">— {formatText('pay when it arrives')}</span>
-        </label>
-        <label className="pay">
-          <input type="radio" name="pay"/> 
-          <span>{formatText('Bank transfer')}</span>
-          <span className="caption">— {formatText('instant verification')}</span>
-        </label>
+
+        <div className="cart-summary-payment">
+          <PayToggle brandId={brand} value={payMethod} onChange={setPayMethod}/>
+        </div>
+
         <button className="btn primary lg full">{formatText('Place order')}</button>
       </div>
     </div>

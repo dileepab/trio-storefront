@@ -44,6 +44,7 @@
   --text-6xl: 72px;
 
   --leading-tight: 1.1;
+  --leading-heading: 1.15;
   --leading-snug: 1.25;
   --leading-normal: 1.5;
   --leading-relaxed: 1.65;
@@ -51,7 +52,18 @@
   --tracking-tight: -0.02em;
   --tracking-normal: 0;
   --tracking-wide: 0.04em;
-  --tracking-widest: 0.16em;
+  --tracking-widest: 0.18em;
+
+  /* Minimum comfortable touch target (WCAG 2.5.5 / iOS HIG) */
+  --tap-min: 44px;
+
+  /* Sticky header height — chat panel and scroll offsets anchor to this */
+  --header-h: 56px;
+  --header-h-desktop: 64px;
+
+  /* Height of the docked mobile buy bar (48px control + 12px padding each side).
+     Content padding and the chat pill offset both derive from it. */
+  --pdp-cta-h: 76px;
 
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
@@ -67,9 +79,13 @@
   --z-modal: 70;
   --z-toast: 80;
 
-  /* Neutral semantic — fallbacks; brand skins may override */
-  --status-success: #128A50;
-  --status-warning: #B8762B;
+  /* Neutral semantic — fallbacks; brand skins may override.
+     These carry small text (stock lines, low-stock badges), so each is tuned to
+     clear 4.5:1 against the lightest brand surface rather than to look pretty
+     in isolation. The pre-audit values (#128A50 / #B8762B) measured 4.15 and
+     3.50 against the warm off-white backgrounds. */
+  --status-success: #0F7A46;
+  --status-warning: #9A6122;
   --status-error: #C5394C;
   --status-info: #2A6FDB;
 
@@ -86,6 +102,16 @@
   --brand-muted: #8E8278;
   --brand-border: #E1D8CE;
   --brand-border-subtle: #ECE4DA;
+  /* Tinted wash of the accent — badges, progress fills, selected rows.
+     Declared per skin (not derived with color-mix in :root) because custom
+     properties resolve var() where they are *declared*, so a :root formula
+     would freeze against the default skin's accent. */
+  --brand-accent-soft: #F3E4DE;
+
+  /* Hero canvas — replaces the per-brand hex that used to be passed inline */
+  --brand-hero-from: #D9A899;
+  --brand-hero-to: #9DB09A;
+  --brand-hero-ink: #2A2118;
 
   --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Inter Tight', system-ui, sans-serif;
@@ -101,6 +127,12 @@
     0 8px 18px -6px rgba(46, 42, 38, 0.10),
     0 26px 48px -24px rgba(46, 42, 38, 0.22);
   --shadow-cta: 0 1px 2px rgba(46, 42, 38, 0.08);
+  --shadow-dropdown:
+    0 1px 1px rgba(46, 42, 38, 0.05),
+    0 12px 28px -10px rgba(46, 42, 38, 0.18),
+    0 32px 60px -32px rgba(46, 42, 38, 0.26);
+  /* Upward cast for bottom-docked bars (mobile PDP CTA, drawer summary) */
+  --shadow-sticky: 0 -10px 28px -16px rgba(46, 42, 38, 0.28);
 
   /* Brand glyph chars (used by ::before/::after in some components) */
   --glyph-divider: '·';
@@ -108,7 +140,12 @@
 
 /* -------- 3a. Happy Buy skin — friendly, professional, light -------- */
 [data-brand="happybuy"] {
-  --brand-primary: #D94B26;        /* warm terracotta — confident not shouty */
+  /* Terracotta, deepened from the #D94B26 brand hex. That value measures
+     4.21:1 against white and 3.98:1 as text on the cream page — both under AA,
+     and it fills every primary button, the chat pill and the cart badge. This
+     shade is visually the same terracotta at 4.94:1 / 4.66:1. The original
+     #D94B26 is kept as the hero gradient anchor below, where it runs large. */
+  --brand-primary: #C74320;
   --brand-primary-hover: #B83D1D;
   --brand-accent: #F4C95D;         /* soft gold */
   --brand-accent-2: #2E6F8E;       /* deep teal as cool counterpoint */
@@ -117,9 +154,16 @@
   --brand-surface-2: #F4EDDF;
   --brand-text: #1F1A14;
   --brand-text-on-primary: #FFFFFF;
-  --brand-muted: #7A6F60;
+  /* Deepened from #7A6F60, which fell to 4.22:1 where muted text sits on
+     --brand-surface-2 (e.g. the pending order badge). */
+  --brand-muted: #736858;
   --brand-border: #E8DECB;
   --brand-border-subtle: #F1E8D6;
+  --brand-accent-soft: #FDF3D9;    /* pale gold wash */
+
+  --brand-hero-from: #F7DC96;      /* lifted gold — keeps dark ink legible */
+  --brand-hero-to: #D94B26;
+  --brand-hero-ink: #1F1A14;
 
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-body: 'Geist', system-ui, sans-serif;
@@ -136,6 +180,11 @@
   --shadow-cta:
     0 1px 2px rgba(31, 26, 20, 0.10),
     0 8px 18px -10px rgba(217, 75, 38, 0.40);
+  --shadow-dropdown:
+    0 1px 1px rgba(31, 26, 20, 0.06),
+    0 12px 28px -10px rgba(31, 26, 20, 0.18),
+    0 32px 60px -32px rgba(31, 26, 20, 0.28);
+  --shadow-sticky: 0 -10px 28px -16px rgba(31, 26, 20, 0.30);
 
   --glyph-divider: '·';
 }
@@ -154,6 +203,17 @@
   --brand-muted: #786655;
   --brand-border: #E5D7B8;
   --brand-border-subtle: #EFE4CC;
+  --brand-accent-soft: #F6EDD8;    /* candlelight wash */
+  /* Heritage gold hairline — used for the thin rules this skin leans on */
+  --brand-border-gold: #D9C48E;
+  /* This skin sets small text (eyebrows, link buttons) in the accent. The
+     display gold #A07A3A only reaches 3.65:1 on ivory, so text uses a deeper
+     draw of the same gold at 5.88:1. */
+  --brand-accent-ink: #7A5A24;
+
+  --brand-hero-from: #F6EFE0;      /* ivory at the copy end */
+  --brand-hero-to: #A07A3A;
+  --brand-hero-ink: #2A2118;
 
   --font-display: 'Cormorant', Georgia, serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
@@ -168,6 +228,11 @@
     0 12px 24px -10px rgba(42, 33, 24, 0.12),
     0 32px 56px -28px rgba(42, 33, 24, 0.24);
   --shadow-cta: 0 0 0 1px rgba(160, 122, 58, 0.18);
+  --shadow-dropdown:
+    0 0 0 1px rgba(160, 122, 58, 0.16),
+    0 14px 30px -12px rgba(42, 33, 24, 0.18),
+    0 34px 62px -34px rgba(42, 33, 24, 0.30);
+  --shadow-sticky: 0 -10px 28px -16px rgba(42, 33, 24, 0.28);
 
   --glyph-divider: '✦';
 }
@@ -183,9 +248,15 @@
   --brand-surface-2: #ECE5D8;
   --brand-text: #3A332C;
   --brand-text-on-primary: #F5F0E8;
-  --brand-muted: #8C7F70;
+  /* Deepened from #8C7F70, which measured only 3.44:1 on the bone background */
+  --brand-muted: #6F6456;
   --brand-border: #DDD2C0;
   --brand-border-subtle: #E8DFCD;
+  --brand-accent-soft: #F3E4DE;    /* dusty rose wash */
+
+  --brand-hero-from: #EBD7CF;      /* rose, lightened at the copy end */
+  --brand-hero-to: #9DB09A;
+  --brand-hero-ink: #3A332C;
 
   --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Inter Tight', system-ui, sans-serif;
@@ -200,6 +271,11 @@
     0 10px 22px -8px rgba(58, 51, 44, 0.10),
     0 30px 54px -26px rgba(58, 51, 44, 0.20);
   --shadow-cta: 0 1px 2px rgba(58, 51, 44, 0.08);
+  --shadow-dropdown:
+    0 1px 1px rgba(58, 51, 44, 0.05),
+    0 12px 28px -10px rgba(58, 51, 44, 0.14),
+    0 32px 60px -32px rgba(58, 51, 44, 0.24);
+  --shadow-sticky: 0 -10px 28px -16px rgba(58, 51, 44, 0.24);
 
   --glyph-divider: '—';
 }
@@ -239,26 +315,31 @@ p, .body, .body-sm {
 [data-brand="cleopatra"] .h-display { font-weight: 400; letter-spacing: 0; }
 [data-brand="modabella"] .h-display { font-weight: 300; letter-spacing: -0.015em; }
 
+/* .h1/.h2 are the single source of truth — storefront.css must not redeclare
+   them, or the two definitions drift and the later file wins by accident. */
 .h1 {
   font-family: var(--font-display);
-  font-size: var(--text-4xl);
+  font-size: clamp(32px, 5vw, 48px);
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-tight);
   font-weight: 400;
+  margin: 0;
 }
 [data-brand="happybuy"] .h1 { font-weight: 400; font-style: italic; }
-[data-brand="cleopatra"] .h1 { font-weight: 400; }
-[data-brand="modabella"] .h1 { font-weight: 300; }
+[data-brand="cleopatra"] .h1 { font-weight: 300; font-style: italic; letter-spacing: 0.05em; }
+[data-brand="modabella"] .h1 { font-weight: 300; letter-spacing: -0.015em; }
 
 .h2 {
   font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  line-height: var(--leading-tight);
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-tight);
   font-weight: 400;
+  margin: 0;
 }
 [data-brand="happybuy"] .h2 { font-weight: 400; font-style: italic; }
-[data-brand="cleopatra"] .h2 { font-weight: 500; }
-[data-brand="modabella"] .h2 { font-weight: 400; }
+[data-brand="cleopatra"] .h2 { font-weight: 300; font-style: italic; letter-spacing: 0.05em; }
+[data-brand="modabella"] .h2 { font-weight: 300; letter-spacing: -0.015em; }
 
 .h3 {
   font-family: var(--font-body);
@@ -300,17 +381,19 @@ p, .body, .body-sm {
 
 .eyebrow {
   font-family: var(--font-body);
-  font-size: var(--text-xs);
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
   color: var(--brand-muted);
 }
-[data-brand="cleopatra"] .eyebrow { color: var(--brand-accent); }
+[data-brand="cleopatra"] .eyebrow { color: var(--brand-accent-ink); }
 
 .price {
   font-family: var(--font-body);
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--brand-text);
   font-feature-settings: 'tnum' 1;
 }
 [data-brand="happybuy"] .price { color: var(--brand-primary); font-weight: 800; }
@@ -321,7 +404,8 @@ p, .body, .body-sm {
   text-decoration: line-through;
   color: var(--brand-muted);
   font-weight: 400;
-  margin-right: var(--space-2);
+  font-size: var(--text-xs);
+  margin-right: 6px;
 }
 
 /* -------- 5. Utility primitives most components reuse -------- */
@@ -348,13 +432,17 @@ p, .body, .body-sm {
   background: color-mix(in srgb, var(--brand-surface) 85%, transparent) !important;
 }
 
-/* Focus ring — accent at 2px, no glow */
-:where(button, a, input, select, textarea):focus-visible {
-  outline: 2px solid var(--brand-accent);
+/* Focus ring — primary at 2px, no glow.
+   Drawn in --brand-primary rather than --brand-accent: the accents are pale by
+   design (gold #F4C95D, rose #D9A899) and measured 1.48:1 and 1.85:1 against
+   their own page backgrounds, well under the 3:1 that WCAG 1.4.11 asks of a
+   focus indicator. The primaries clear it at 4.66:1 and above.
+   `summary` is included so the PDP accordion shows focus like everything else. */
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
 }
-[data-brand="cleopatra"] :where(button, a, input, select, textarea):focus-visible {
-  outline-color: var(--brand-accent);
+[data-brand="cleopatra"] :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
   outline-offset: 3px;
 }
 
@@ -424,17 +512,16 @@ html {
   animation: cart-pop 0.35s var(--ease-out);
 }
 
-/* Custom letter-spacing anchors */
-[data-brand="cleopatra"] .h1, 
-[data-brand="cleopatra"] .h2 {
-  letter-spacing: 0.05em;
-  font-weight: 300;
-}
+/* -------- 6. Touch ergonomics --------
+   The --tap-min sizing rules live at the foot of storefront.css, not here:
+   they target component classes declared in that file, and since it loads
+   second, an equal-specificity rule here would lose the tie. */
 
-[data-brand="modabella"] .h1, 
-[data-brand="modabella"] .h2 {
-  letter-spacing: -0.015em;
-  font-weight: 300;
+/* Inputs must stay >=16px on mobile or iOS Safari zooms the viewport on focus */
+@media (max-width: 700px) {
+  :where(input, select, textarea) {
+    font-size: max(16px, 1em);
+  }
 }
 
 /* Reduced motion */

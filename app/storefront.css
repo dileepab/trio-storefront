@@ -33,15 +33,18 @@ button {
   cursor: pointer;
 }
 
-/* ===== Trio portal (root /) ===== */
+/* ===== Trio portal (root /) =====
+   Sits outside any [data-brand] subtree, so it reads the :root defaults. */
 .trio-portal {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #FBF8F3 0%, #F5F0E8 100%);
+  background: linear-gradient(180deg,
+      var(--brand-surface) 0%,
+      var(--brand-bg) 100%);
   padding: 40px;
-  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 
 .trio-portal-inner {
@@ -51,25 +54,25 @@ button {
 }
 
 .trio-eyebrow {
-  font-size: 12px;
+  font-size: var(--text-xs);
   letter-spacing: 0.32em;
   font-weight: 600;
-  color: #8C7F70;
+  color: var(--brand-muted);
   margin-bottom: 16px;
 }
 
 .trio-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-weight: 300;
   font-size: clamp(40px, 6vw, 72px);
   line-height: 1.05;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
   margin: 0 0 16px;
-  color: #3A332C;
+  color: var(--brand-text);
 }
 
 .trio-sub {
-  color: #8C7F70;
+  color: var(--brand-muted);
   margin: 0 0 56px;
   font-size: 17px;
 }
@@ -87,16 +90,17 @@ button {
   justify-content: center;
   gap: 8px;
   padding: 56px 24px;
-  border-radius: 12px;
-  background: #fff;
-  border: 1px solid #E8DECB;
-  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1), box-shadow 200ms;
+  border-radius: var(--radius-lg);
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  transition: transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
   min-height: 260px;
 }
 
 .trio-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 40px -16px rgba(58, 51, 44, 0.18);
+  box-shadow: var(--shadow-lift);
 }
 
 .trio-card-mark img {
@@ -104,14 +108,14 @@ button {
 }
 
 .trio-card-name {
-  font-family: 'Fraunces', serif;
+  font-family: var(--font-display);
   font-size: 22px;
   margin-top: 12px;
 }
 
 .trio-card-domain {
   font-size: 13px;
-  color: #8C7F70;
+  color: var(--brand-muted);
 }
 
 /* ===== Header ===== */
@@ -120,18 +124,29 @@ button {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  min-height: var(--header-h);
   padding: 8px 16px;
   background: color-mix(in srgb, var(--brand-surface) 85%, transparent);
   border-bottom: 1px solid var(--brand-border-subtle);
   position: sticky;
   top: 0;
-  z-index: 40;
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  z-index: var(--z-nav);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
   box-shadow: 0 0 0 0 transparent;
   transition: background var(--dur-base) var(--ease-out),
     box-shadow var(--dur-slow) var(--ease-out),
     border-color var(--dur-base) var(--ease-out);
+}
+
+/* The mobile nav drawer, auth modal and profile dashboard are all rendered
+   inside <header>, so they are trapped in its --z-nav stacking context: their
+   own high z-index cannot lift them above anything painted later at a higher
+   level (the PDP buy bar at --z-mobile-cta, the chat pill at --z-chat). Raising
+   the header itself while one of them is open lifts the whole subtree. */
+.sf-header:has(.mobile-drawer-overlay),
+.sf-header:has(.auth-overlay) {
+  z-index: var(--z-modal);
 }
 
 /* Elevation fades in only after scrolling, so the bar feels anchored to content */
@@ -151,30 +166,90 @@ button {
 }
 
 .sf-logo img {
-  height: 60px;
-  max-width: 180px;
+  height: 40px;
+  max-width: 172px;
   object-fit: contain;
 }
 
+/* Cleopatra's mark is a wide lockup; Modabella's is a tall square — each needs
+   its own cap so the three skins read at the same optical weight. */
+[data-brand="cleopatra"] .sf-logo img {
+  height: 34px;
+  max-width: 200px;
+}
+
+[data-brand="modabella"] .sf-logo img {
+  height: 46px;
+  max-width: 190px;
+}
 
 .sf-nav {
   display: none;
-  gap: 20px;
+  gap: 22px;
   font-size: 14px;
   align-items: center;
 }
 
 .sf-nav a {
+  position: relative;
   color: var(--brand-text);
+  padding: 4px 1px;
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+/* Hairline wipes in from the left rather than snapping on */
+.sf-nav a::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
 .sf-nav a:hover {
   color: var(--brand-primary);
 }
 
+.sf-nav a:hover::after,
+.sf-nav a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.sf-nav-featured {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+/* A drawn rule rather than a "|" glyph — a text pipe is announced by screen
+   readers and gets held to text-contrast rules despite being decoration. */
+.sf-nav-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--brand-border);
+  flex-shrink: 0;
+}
+
 .sf-header-actions {
   display: flex;
+  align-items: center;
   gap: 4px;
+}
+
+.sf-account-btn {
+  width: auto;
+  gap: 6px;
+  padding: 0 10px;
+}
+
+.sf-account-name {
+  font-weight: 600;
+  color: var(--brand-primary);
 }
 
 .icon-btn {
@@ -202,20 +277,24 @@ button {
 
 .cart-pill {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  font-size: 10px;
+  top: 3px;
+  right: 1px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
   font-weight: 700;
+  line-height: 1;
+  font-feature-settings: 'tnum' 1;
   background: var(--brand-primary);
   color: var(--brand-text-on-primary);
+  /* Ring in the bar colour keeps the count legible over the cart glyph */
+  box-shadow: 0 0 0 2px var(--brand-surface);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
 .sf-mobile-only {
@@ -230,6 +309,7 @@ button {
   .sf-header {
     display: grid;
     grid-template-columns: auto 1fr auto;
+    min-height: var(--header-h-desktop);
     padding: 0 32px;
   }
 
@@ -254,7 +334,8 @@ button {
 
 /* ===== Hero ===== */
 .hero {
-  color: #fff;
+  color: var(--brand-hero-ink);
+  background: linear-gradient(160deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%);
   padding: 56px 18px 64px;
   position: relative;
   overflow: hidden;
@@ -286,38 +367,65 @@ button {
   pointer-events: none;
 }
 
-[data-brand="modabella"] .hero {
-  color: #2A2118;
-}
-
-[data-brand="happybuy"] .hero {
-  color: #1F1A14;
-}
-
-[data-brand="cleopatra"] .hero {
-  color: #2A2118;
-}
-
 .hero-inner {
-  max-width: 720px;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 14px;
   position: relative;
   z-index: 1;
+}
+
+/* Brand-matched badge chip — carries each skin's divider glyph */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-surface) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-hero-ink) 14%, transparent);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--brand-hero-ink);
+  white-space: nowrap;
+}
+
+.hero-badge::before {
+  content: var(--glyph-divider);
+  opacity: 0.55;
+}
+
+[data-brand="cleopatra"] .hero-badge {
+  border-radius: var(--radius);
+  border-color: var(--brand-border-gold);
+}
+
+[data-brand="modabella"] .hero-badge {
+  border-radius: var(--radius);
+  text-transform: lowercase;
+  letter-spacing: 0.14em;
 }
 
 .hero-title {
   white-space: pre-line;
   margin: 0;
   font-size: clamp(36px, 6vw, 64px);
+  max-width: 18ch;
 }
 
 .hero-sub {
   margin: 0;
-  opacity: 0.78;
+  opacity: 0.82;
   font-size: 16px;
+  max-width: 46ch;
 }
 
 .hero .btn {
@@ -327,7 +435,20 @@ button {
 
 @media (min-width: 900px) {
   .hero {
-    padding: 96px 40px 112px;
+    padding: 88px 40px 100px;
+  }
+
+  .hero-inner {
+    gap: 18px;
+    padding-inline: 8px;
+  }
+
+  .hero-sub {
+    font-size: 18px;
+  }
+
+  .hero .btn {
+    margin-top: 20px;
   }
 }
 
@@ -409,17 +530,24 @@ button {
 }
 
 [data-brand="cleopatra"] .link-btn {
-  color: var(--brand-accent);
+  color: var(--brand-accent-ink);
 }
 
 /* ===== Trust strip ===== */
 .trust {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
   padding: 16px 14px;
   background: color-mix(in srgb, var(--brand-surface-2) 60%, var(--brand-surface));
   border-block: 1px solid var(--brand-border-subtle);
+}
+
+/* Band spans the viewport; the claims stay grouped so they don't drift apart
+   into three lonely islands on wide screens. */
+.trust-inner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .trust-item + .trust-item {
@@ -489,42 +617,8 @@ button {
   }
 }
 
-.h1 {
-  font-family: var(--font-display);
-  font-size: clamp(32px, 5vw, 48px);
-  line-height: 1.1;
-  margin: 0;
-}
-
-.h2 {
-  font-family: var(--font-display);
-  font-size: clamp(22px, 3vw, 32px);
-  line-height: 1.15;
-  margin: 0;
-  font-weight: 400;
-}
-
-[data-brand="cleopatra"] .h1,
-[data-brand="cleopatra"] .h2 {
-  font-style: italic;
-}
-
-.eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--brand-muted);
-}
-
-[data-brand="cleopatra"] .eyebrow {
-  color: var(--brand-accent);
-}
-
-.caption {
-  font-size: 12px;
-  color: var(--brand-muted);
-}
+/* .h1 / .h2 / .eyebrow / .caption / .price live in globals.css — this file used
+   to redeclare them, so the two definitions silently competed on load order. */
 
 /* ===== Product card ===== */
 .p-card {
@@ -557,19 +651,44 @@ button {
   aspect-ratio: 4/5;
   position: relative;
   overflow: hidden;
-  transition: transform var(--dur-slow) var(--ease-out);
 }
 
 .p-img img,
 .p-card-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform var(--dur-slow) var(--ease-out), opacity var(--dur-base) var(--ease-out);
 }
 
-.p-card:hover .p-img {
-  transform: scale(1.03);
+/* Zoom the photograph only. Scaling .p-img instead dragged the tag, the save
+   button and the quick-add panel along with it. */
+.p-card:hover .p-img img,
+.p-card:hover .p-card-img {
+  transform: scale(1.04);
+}
+
+.p-card.is-sold-out:hover {
+  transform: none;
+  box-shadow: var(--shadow-card);
+}
+
+.p-card.is-sold-out .p-img img,
+.p-card.is-sold-out .p-card-img {
+  filter: saturate(0.5);
+  transform: none;
+}
+
+/* Sits above the artwork, below the badge (z-index 2) */
+.p-sold-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--brand-surface) 52%, transparent);
+  pointer-events: none;
 }
 
 /* ===== Hover Quick Add Size Selector ===== */
@@ -717,6 +836,56 @@ button {
   padding: 4px 8px;
 }
 
+/* ===== Stock status badge ===== */
+.p-stock {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.18);
+}
+
+.p-stock::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.p-stock--low {
+  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
+  color: var(--status-warning);
+}
+
+.p-stock--out {
+  background: color-mix(in srgb, var(--brand-text) 84%, transparent);
+  color: var(--brand-surface);
+}
+
+[data-brand="cleopatra"] .p-stock {
+  border-radius: 0;
+  letter-spacing: 0.14em;
+}
+
+[data-brand="modabella"] .p-stock {
+  border-radius: var(--radius-sm);
+  text-transform: lowercase;
+  letter-spacing: 0.1em;
+}
+
 .p-fav {
   position: absolute;
   top: 10px;
@@ -795,21 +964,6 @@ button {
   gap: 8px;
 }
 
-.price {
-  font-weight: 600;
-  font-feature-settings: 'tnum' 1;
-  font-size: 14px;
-  color: var(--brand-text);
-}
-
-.price-strike {
-  text-decoration: line-through;
-  color: var(--brand-muted);
-  font-weight: 400;
-  font-size: 12px;
-  margin-right: 6px;
-}
-
 .p-rating {
   font-size: 12px;
   color: var(--brand-muted);
@@ -882,18 +1036,83 @@ button {
   margin-left: auto;
 }
 
-/* Dropdown Premium Styles */
+/* Dropdown Premium Styles — one token-driven rule replaces the three
+   hand-mixed rgba() values (happybuy had none and fell back to plain white). */
 .filter-dropdown {
+  position: absolute;
+  top: 100%;
+  margin-top: 8px;
+  padding: 16px;
+  min-width: 240px;
+  width: max-content;
+  max-width: 320px;
+  z-index: 20;
+  border: 1px solid var(--brand-border-subtle);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--brand-surface) 85%, transparent);
+  box-shadow: var(--shadow-dropdown);
   backdrop-filter: blur(24px) saturate(180%);
-  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
-[data-brand="modabella"] .filter-dropdown {
-  background: rgba(246, 245, 243, 0.85);
+.filter-dropdown--start {
+  left: 0;
+  right: auto;
 }
 
-[data-brand="cleopatra"] .filter-dropdown {
-  background: rgba(251, 246, 236, 0.85);
+.filter-dropdown--end {
+  left: auto;
+  right: 0;
+}
+
+.filter-dropdown-title {
+  margin: 0 0 12px;
+}
+
+/* Option rows shared by the colour, price and sort panels */
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--brand-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.filter-option:hover {
+  background: color-mix(in srgb, var(--brand-surface-2) 60%, transparent);
+}
+
+.filter-option.is-on {
+  background: var(--brand-surface-2);
+  font-weight: 600;
+}
+
+.filter-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Pale swatches need an outline or they vanish against the panel */
+.filter-swatch--pale {
+  border: 1px solid var(--brand-border);
 }
 
 .animate-fade-in {
@@ -947,6 +1166,12 @@ button {
   margin: 0 auto;
 }
 
+.pdp-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .pdp-img {
   aspect-ratio: 4/5;
   position: relative;
@@ -967,8 +1192,82 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
+/* Sold-out marker on the gallery, mirroring the catalogue badge */
+.pdp-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.pdp-badge--out {
+  background: color-mix(in srgb, var(--brand-text) 84%, transparent);
+  color: var(--brand-surface);
+}
+
+[data-brand="cleopatra"] .pdp-badge { border-radius: 0; }
+[data-brand="modabella"] .pdp-badge { border-radius: var(--radius-sm); text-transform: lowercase; }
+
+/* Thumbnail strip — scrolls horizontally on narrow screens */
+.pdp-thumb-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.pdp-thumb-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.pdp-thumb {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 80px;
+  padding: 0;
+  border: 1px solid var(--brand-border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--brand-surface-2);
+  cursor: pointer;
+  opacity: 0.62;
+  transition: opacity var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.pdp-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pdp-thumb:hover {
+  opacity: 0.85;
+  transform: translateY(-2px);
+}
+
+.pdp-thumb.is-on {
+  opacity: 1;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-primary);
+}
+
+/* Legacy swatch chips shown when a product has no photography at all */
 .pdp-thumbs {
   position: absolute;
   bottom: 16px;
@@ -1011,7 +1310,7 @@ button {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #128A50;
+  color: var(--status-success);
   font-weight: 500;
 }
 
@@ -1019,7 +1318,15 @@ button {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #128A50;
+  background: currentColor;
+}
+
+.pdp-stock.is-low {
+  color: var(--status-warning);
+}
+
+.pdp-stock.is-out {
+  color: var(--brand-muted);
 }
 
 .pdp-section {
@@ -1033,6 +1340,63 @@ button {
   letter-spacing: 0.10em;
   color: var(--brand-muted);
   margin-bottom: 10px;
+}
+
+/* Names the chosen colour next to the label, so the swatch is never the
+   only carrier of the selection (colour alone fails WCAG 1.4.1) */
+.pdp-label-value {
+  margin-left: 6px;
+  color: var(--brand-text);
+  text-transform: none;
+  letter-spacing: var(--tracking-normal);
+}
+
+/* ===== Colour selector ===== */
+.swatch-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* Ring lives on the button, dot on the child, so selection never nudges layout */
+  box-shadow: inset 0 0 0 1px var(--brand-border-subtle);
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.swatch-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: block;
+}
+
+.swatch--pale .swatch-dot {
+  box-shadow: inset 0 0 0 1px var(--brand-border);
+}
+
+.swatch:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1px var(--brand-muted);
+}
+
+.swatch.is-on {
+  box-shadow: inset 0 0 0 2px var(--brand-primary);
+}
+
+[data-brand="cleopatra"] .swatch,
+[data-brand="cleopatra"] .swatch-dot {
+  border-radius: 0;
 }
 
 .size-row {
@@ -1077,9 +1441,71 @@ button {
   line-height: 1.6;
 }
 
+/* ===== PDP accordion (fabric / care / delivery) ===== */
+.pdp-accordion {
+  margin-top: 24px;
+  border-top: 1px solid var(--brand-border-subtle);
+}
+
+.pdp-panel {
+  border-bottom: 1px solid var(--brand-border-subtle);
+}
+
+.pdp-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--tap-min);
+  padding: 14px 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--brand-text);
+  cursor: pointer;
+  list-style: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+/* Suppress the native disclosure triangle — we draw our own chevron */
+.pdp-panel-head::-webkit-details-marker {
+  display: none;
+}
+
+.pdp-panel-head:hover {
+  color: var(--brand-primary);
+}
+
+.pdp-panel-head svg {
+  flex-shrink: 0;
+  color: var(--brand-muted);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.pdp-panel[open] .pdp-panel-head svg {
+  transform: rotate(180deg);
+}
+
+.pdp-panel-body {
+  padding: 0 2px 16px;
+  color: var(--brand-muted);
+}
+
+.pdp-panel-body p {
+  margin: 0 0 8px;
+}
+
+.pdp-panel-body p:last-child {
+  margin-bottom: 0;
+}
+
+[data-brand="cleopatra"] .pdp-panel-head {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+
 .pdp-cta {
-  position: sticky;
-  bottom: 0;
   display: flex;
   gap: 8px;
   padding: 14px 0;
@@ -1098,6 +1524,42 @@ button {
   align-items: center;
   justify-content: center;
   color: var(--brand-text);
+  flex-shrink: 0;
+}
+
+/* Mobile: the buy bar docks to the viewport rather than merely sticking inside
+   a scroll container, so it is reachable at any scroll position. */
+@media (max-width: 899px) {
+  .pdp-cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-mobile-cta);
+    margin-top: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--brand-surface) 88%, transparent);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: var(--shadow-sticky);
+  }
+
+  /* Reserve the bar's footprint on the page container, not inside .pdp-body.
+     Padding on the body would open a gap above the footer while the bar still
+     covered the footer's last row; here the reserved strip lands after it. */
+  .pdp-body {
+    padding-bottom: 24px;
+  }
+
+  .brand-root:has(.pdp) {
+    padding-bottom: calc(var(--pdp-cta-h) + env(safe-area-inset-bottom));
+  }
+}
+
+/* The buy bar sits at the bottom edge on every breakpoint (fixed on mobile,
+   sticky on desktop), so the chat pill has to clear it at both. */
+.brand-root:has(.pdp) .fab {
+  bottom: calc(var(--pdp-cta-h) + 16px + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 900px) {
@@ -1106,6 +1568,7 @@ button {
     grid-template-columns: 1fr 1fr;
     gap: 48px;
     padding: 40px 24px;
+    align-items: start;
   }
 
   .pdp-img {
@@ -1114,8 +1577,18 @@ button {
     overflow: hidden;
   }
 
+  /* Keep the 4:5 frame from growing taller than the viewport on wide screens */
+  .pdp-img-wrapper {
+    max-height: calc(100vh - var(--header-h-desktop) - 96px);
+  }
+
   .pdp-body {
     padding: 0;
+  }
+
+  .pdp-cta {
+    position: sticky;
+    bottom: 0;
   }
 }
 
@@ -1167,6 +1640,29 @@ button {
   font-size: 14px;
 }
 
+.cart-line-remove {
+  background: transparent;
+  border: 0;
+  color: var(--brand-muted);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin: -10px -10px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.cart-line-remove:hover {
+  color: var(--status-error);
+  background: var(--brand-surface-2);
+}
+
 .cart-row {
   display: flex;
   align-items: center;
@@ -1178,22 +1674,159 @@ button {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--brand-border-subtle);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-surface);
+  overflow: hidden;
 }
 
 .qty button {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border: 0;
   background: transparent;
+  color: var(--brand-text);
   font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.qty button:hover {
+  background: var(--brand-surface-2);
+  color: var(--brand-primary);
+}
+
+.qty button:active {
+  background: var(--brand-accent-soft);
 }
 
 .qty span {
-  min-width: 28px;
+  min-width: 30px;
   text-align: center;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ===== Free-shipping progress ===== */
+.ship-progress {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--brand-border-subtle);
+}
+
+.ship-progress-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--brand-muted);
+}
+
+.ship-progress-label strong {
+  color: var(--brand-text);
+  font-weight: 700;
+  font-feature-settings: 'tnum' 1;
+}
+
+.ship-progress.is-qualified .ship-progress-label {
+  color: var(--status-success);
+  font-weight: 600;
+}
+
+.ship-progress-tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--status-success);
+  color: var(--brand-surface);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ship-progress-track {
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-surface-2);
+  overflow: hidden;
+}
+
+.ship-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-accent), var(--brand-primary));
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+.ship-progress.is-qualified .ship-progress-fill {
+  background: var(--status-success);
+}
+
+.row-free {
+  color: var(--status-success);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+/* ===== Payment segmented control ===== */
+.pay-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pay-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: var(--tap-min);
+  padding: 10px 12px;
+  border: 1px solid var(--brand-border-subtle);
+  border-radius: var(--radius);
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.pay-option:hover {
+  border-color: var(--brand-primary);
+}
+
+.pay-option.is-on {
+  border-color: var(--brand-primary);
+  background: var(--brand-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--brand-primary);
+}
+
+.pay-option-label {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.pay-option-hint {
+  font-size: 11px;
+  color: var(--brand-muted);
+  line-height: 1.25;
+}
+
+.pay-option.is-on .pay-option-hint {
+  color: var(--brand-text);
+}
+
+.cart-summary-payment {
+  margin: 14px 0 16px;
 }
 
 .cart-summary {
@@ -1221,17 +1854,7 @@ button {
   margin-top: 4px;
 }
 
-.pay {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 0;
-  font-size: 14px;
-}
-
-.pay input {
-  accent-color: var(--brand-primary);
-}
+/* The old `.pay` radio rows were replaced by the .pay-toggle segmented control */
 
 /* ===== Footer ===== */
 .sf-footer {
@@ -1315,23 +1938,71 @@ button {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  height: 52px;
+  padding: 0 20px 0 16px;
+  border-radius: var(--radius-pill);
   border: 0;
   background: var(--brand-primary);
   color: var(--brand-text-on-primary);
-  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.10),
+    0 12px 28px -8px rgba(0, 0, 0, 0.32);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: var(--z-chat);
+  transition: transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out);
+}
+
+.fab-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  z-index: 60;
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
 }
 
 .fab:hover {
-  transform: scale(1.05);
-  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.30);
+  background: var(--brand-primary-hover);
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 18px 36px -10px rgba(0, 0, 0, 0.38);
+}
+
+.fab:active {
+  transform: translateY(0);
+}
+
+[data-brand="cleopatra"] .fab {
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+}
+
+[data-brand="modabella"] .fab {
+  border-radius: var(--radius);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Below ~420px the label costs more than it earns — collapse to a disc */
+@media (max-width: 420px) {
+  .fab {
+    width: 52px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .fab-label {
+    display: none;
+  }
 }
 
 .chat-panel {
@@ -1580,7 +2251,7 @@ button {
 /* On mobile, open the chat full-width docked directly below the sticky header */
 @media (max-width: 700px) {
   .chat-panel {
-    top: 56px; /* height of the mobile header (40px icon button + 8px*2 padding) */
+    top: var(--header-h);
     right: 0;
     bottom: 0;
     left: 0;
@@ -1842,14 +2513,9 @@ button {
 }
 
 .cart-drawer-payment {
-  margin: 12px 0 16px;
+  margin: 14px 0 16px;
   border-top: 1px solid var(--brand-border-subtle);
-  border-bottom: 1px solid var(--brand-border-subtle);
-  padding: 8px 0;
-}
-
-.cart-drawer-payment .pay {
-  padding: 6px 0;
+  padding-top: 14px;
 }
 
 .cart-drawer-checkout {
@@ -2693,11 +3359,79 @@ button {
   flex-direction: column;
 }
 
+.mobile-drawer-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mobile-drawer-nav a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  padding: 10px 0;
+  color: var(--brand-text);
+  border-bottom: 1px solid var(--brand-border-subtle);
+  transition: color var(--dur-fast), padding-left var(--dur-fast);
+}
+
 .mobile-drawer-nav a:hover {
   color: var(--brand-primary);
   padding-left: 4px;
 }
 
-.mobile-drawer-nav a {
-  transition: color var(--dur-fast), padding-left var(--dur-fast);
+.mobile-drawer-featured {
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.mobile-drawer-lang {
+  width: 100%;
+  height: var(--tap-min);
+}
+
+.mobile-drawer-account {
+  margin-top: auto;
+  border-top: 1px solid var(--brand-border-subtle);
+  padding-top: 20px;
+}
+
+/* ===== Touch ergonomics =====
+   Every control reaches a real --tap-min box. Sized with actual dimensions
+   rather than an enlarged ::after hit area, because invisible overlays on
+   neighbouring controls (qty steppers, quick-add sizes) steal each other's
+   taps. `min-height` rather than `height` throughout, so these never fight
+   the fixed heights the component rules above already set.
+
+   Keyed on width as well as pointer type: `pointer: coarse` alone misses
+   narrow windows on hybrid devices and is not reported by desktop browsers
+   emulating a phone viewport. */
+@media (pointer: coarse), (max-width: 700px) {
+  .icon-btn,
+  .p-fav,
+  .p-quick-add-btn,
+  .chat-send,
+  .chat-close,
+  .cart-drawer-close,
+  .mobile-drawer-close,
+  .vto-close,
+  .vto-avatar-btn,
+  .lookbook-size-btn,
+  .qty button,
+  .chip,
+  .vto-launch-btn {
+    min-width: var(--tap-min);
+    min-height: var(--tap-min);
+  }
+
+  .cart-drawer-delete,
+  .link-btn,
+  .sf-footer-inner a {
+    min-height: var(--tap-min);
+    display: inline-flex;
+    align-items: center;
+  }
 }

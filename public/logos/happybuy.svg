@@ -1,5 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-label="Happy Buy">
-  
+  <!-- Styles must live inside the file: an SVG loaded through <img> is an
+       isolated document and never inherits the page stylesheet. Fonts must be
+       generic for the same reason — no webfont can be fetched from here. -->
+  <style>
+    .hb-dot  { fill: #D94B26; }
+    .hb-mark { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 42px; }
+    .hb-text   { fill: #1F1A14; }
+    .hb-text-2 { fill: #D94B26; }
+  </style>
   <circle class="hb-dot" cx="36" cy="40" r="22"></circle>
   <text x="68" y="54" class="hb-mark hb-text">Happy</text>
   <text x="195" y="54" class="hb-mark hb-text-2">Buy</text>

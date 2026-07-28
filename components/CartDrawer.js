@@ -4,6 +4,9 @@ import { useCart } from '@/lib/cartContext';
 import { useAuth } from '@/lib/authContext';
 import Icon from './Icon';
 import AuthModal from './AuthModal';
+import PayToggle from './PayToggle';
+import ShipProgress from './ShipProgress';
+import { shippingFor } from '@/lib/shipping';
 
 export default function CartDrawer({ brand }) {
   const { cartItems, isOpen, closeCart, updateQty, removeFromCart, placeOrder } = useCart();
@@ -15,12 +18,13 @@ export default function CartDrawer({ brand }) {
 
   if (!isOpen) return null;
 
+  const brandSlug = brand.id;
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const delivery = subtotal > 0 ? 350 : 0;
+  const shipping = shippingFor(brandSlug, subtotal);
+  const delivery = shipping.fee;
   const total = subtotal + delivery;
 
   const fmt = (num) => num.toLocaleString('en-LK');
-  const brandSlug = brand.id;
 
   // Handle lowercase brand voice rules for Modabella
   const formatText = (text) => {
@@ -152,6 +156,7 @@ export default function CartDrawer({ brand }) {
                     
                     <div className="caption cart-drawer-variant">
                       {formatText('Size')}: <span className="size-label">{item.size}</span>
+                      {item.color && <> <span className="size-label">{formatText(item.color)}</span></>}
                     </div>
 
                     <div className="cart-drawer-row">
@@ -172,13 +177,17 @@ export default function CartDrawer({ brand }) {
         {/* Bottom Checkout Sticky Summary */}
         {!orderSuccessNum && cartItems.length > 0 && (
           <div className="cart-drawer-summary">
+            <ShipProgress brandId={brandSlug} subtotal={subtotal}/>
+
             <div className="row">
               <span>{formatText('Subtotal')}</span>
               <span className="price">LKR {fmt(subtotal)}</span>
             </div>
             <div className="row">
               <span>{formatText('Courier delivery')}</span>
-              <span>LKR {fmt(delivery)}</span>
+              {shipping.qualified
+                ? <span className="row-free">{formatText('Free')}</span>
+                : <span>LKR {fmt(delivery)}</span>}
             </div>
             <div className="row total">
               <span>{formatText('Total')}</span>
@@ -186,29 +195,10 @@ export default function CartDrawer({ brand }) {
             </div>
 
             <div className="cart-drawer-payment">
-              <label className="pay">
-                <input 
-                  type="radio" 
-                  name="drawer_pay" 
-                  checked={payMethod === 'COD'}
-                  onChange={() => setPayMethod('COD')}
-                /> 
-                <span>{formatText('Cash on delivery')}</span>
-                <span className="caption">— {formatText('pay at door')}</span>
-              </label>
-              <label className="pay">
-                <input 
-                  type="radio" 
-                  name="drawer_pay" 
-                  checked={payMethod === 'Bank'}
-                  onChange={() => setPayMethod('Bank')}
-                /> 
-                <span>{formatText('Bank transfer')}</span>
-                <span className="caption">— {formatText('instant approval')}</span>
-              </label>
+              <PayToggle brandId={brandSlug} value={payMethod} onChange={setPayMethod}/>
             </div>
 
-            <button 
+            <button
               className="btn primary lg full cart-drawer-checkout"
               onClick={handleCheckoutClick}
             >

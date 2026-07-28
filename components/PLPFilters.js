@@ -2,26 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import { useI18n } from '@/lib/i18n';
-
-const COLOR_HEX = {
-  Beige: '#D9A899',
-  Black: '#1F1A14',
-  Blue: '#2E6F8E',
-  Champagne: '#C9B89D',
-  Charcoal: '#3A332C',
-  Coral: '#D94B26',
-  Cream: '#ECE5D8',
-  Emerald: '#2E3B36',
-  Navy: '#2A2118',
-  Orange: '#D94B26',
-  Pink: '#D9A899',
-  Red: '#6B3A2E',
-  Sage: '#9DB09A',
-  Stone: '#C9B89D',
-  White: '#F2E9D6',
-  Wine: '#6B3A2E',
-  Yellow: '#F4C95D',
-};
+import { colorHex, isPale } from '@/lib/colors';
 
 export default function PLPFilters({
   brandId,
@@ -58,7 +39,7 @@ export default function PLPFilters({
 
   const sizeOptions = availableSizes.length > 0 ? availableSizes : ['XS', 'S', 'M', 'L', 'XL'];
   const colorSwatches = availableColors.length > 0
-    ? availableColors.map(name => ({ name, hex: COLOR_HEX[name] || 'var(--brand-primary)' }))
+    ? availableColors.map(name => ({ name, hex: colorHex(name) }))
     : ({
         happybuy: [
           { name: 'Yellow', hex: '#F4C95D' },
@@ -167,26 +148,14 @@ export default function PLPFilters({
 
       {/* Floating Glassmorphic Dropdowns */}
       {openPanel && openPanel !== 'filters' && (
-        <div className="filter-dropdown glass-card animate-fade-in" style={{
-          position: 'absolute',
-          top: '100%',
-          left: openPanel === 'sort' ? 'auto' : '0',
-          right: openPanel === 'sort' ? '0' : 'auto',
-          marginTop: '8px',
-          padding: '16px',
-          borderRadius: 'var(--radius)',
-          border: '1px solid var(--brand-border-subtle)',
-          boxShadow: 'var(--shadow-dropdown)',
-          maxWidth: '320px',
-          width: 'max-content',
-          minWidth: '240px',
-          zIndex: 20,
-        }}>
+        <div
+          className={`filter-dropdown animate-fade-in ${openPanel === 'sort' ? 'filter-dropdown--end' : 'filter-dropdown--start'}`}
+        >
           {/* SIZE PANEL */}
           {openPanel === 'size' && (
             <div>
-              <h4 className="eyebrow" style={{ marginBottom: '12px' }}>{t('Select size', brandId)}</h4>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <h4 className="eyebrow filter-dropdown-title">{t('Select size', brandId)}</h4>
+              <div className="size-row">
                 {sizeOptions.map(sz => (
                   <button
                     key={sz}
@@ -195,7 +164,6 @@ export default function PLPFilters({
                       setActiveSize(prev => prev === sz ? null : sz);
                       setOpenPanel(null);
                     }}
-                    style={{ minWidth: '40px', height: '40px' }}
                   >
                     {sz}
                   </button>
@@ -207,41 +175,22 @@ export default function PLPFilters({
           {/* COLOR PANEL */}
           {openPanel === 'color' && (
             <div>
-              <h4 className="eyebrow" style={{ marginBottom: '12px' }}>{t('Select color', brandId)}</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <h4 className="eyebrow filter-dropdown-title">{t('Select color', brandId)}</h4>
+              <div className="filter-option-list">
                 {colorSwatches.map(sw => (
                   <button
                     key={sw.name}
+                    className={`filter-option ${activeColor === sw.name ? 'is-on' : ''}`}
                     onClick={() => {
                       setActiveColor(prev => prev === sw.name ? null : sw.name);
                       setOpenPanel(null);
                     }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      background: activeColor === sw.name ? 'var(--brand-surface-2)' : 'transparent',
-                      border: 0,
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '8px',
-                      width: '100%',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      color: 'var(--brand-text)',
-                      transition: 'background var(--dur-fast)'
-                    }}
                   >
-                    <span style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      background: sw.hex,
-                      border: sw.hex === '#ECE5D8' || sw.hex === '#F2E9D6' ? '1px solid var(--brand-border)' : '0',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}/>
-                    <span style={{ fontSize: '14px', fontWeight: activeColor === sw.name ? '600' : '400' }}>
-                      {t(sw.name, brandId)}
-                    </span>
+                    <span
+                      className={`filter-swatch ${isPale(sw.hex) ? 'filter-swatch--pale' : ''}`}
+                      style={{ background: sw.hex }}
+                    />
+                    <span>{t(sw.name, brandId)}</span>
                   </button>
                 ))}
               </div>
@@ -251,27 +200,15 @@ export default function PLPFilters({
           {/* PRICE PANEL */}
           {openPanel === 'price' && (
             <div>
-              <h4 className="eyebrow" style={{ marginBottom: '12px' }}>{t('Select price range', brandId)}</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <h4 className="eyebrow filter-dropdown-title">{t('Select price range', brandId)}</h4>
+              <div className="filter-option-list">
                 {priceRanges.map(pr => (
                   <button
                     key={pr.key}
+                    className={`filter-option ${activePriceRange === pr.key ? 'is-on' : ''}`}
                     onClick={() => {
                       setActivePriceRange(prev => prev === pr.key ? null : pr.key);
                       setOpenPanel(null);
-                    }}
-                    style={{
-                      background: activePriceRange === pr.key ? 'var(--brand-surface-2)' : 'transparent',
-                      border: 0,
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '8px 12px',
-                      width: '100%',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      color: 'var(--brand-text)',
-                      fontSize: '14px',
-                      fontWeight: activePriceRange === pr.key ? '600' : '400',
-                      transition: 'background var(--dur-fast)'
                     }}
                   >
                     {t(pr.label, brandId)}
@@ -284,27 +221,15 @@ export default function PLPFilters({
           {/* SORT PANEL */}
           {openPanel === 'sort' && (
             <div>
-              <h4 className="eyebrow" style={{ marginBottom: '12px' }}>{t('Sort by', brandId)}</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <h4 className="eyebrow filter-dropdown-title">{t('Sort by', brandId)}</h4>
+              <div className="filter-option-list">
                 {sortOptions.map(opt => (
                   <button
                     key={opt.key}
+                    className={`filter-option ${activeSort === opt.key ? 'is-on' : ''}`}
                     onClick={() => {
                       setActiveSort(opt.key);
                       setOpenPanel(null);
-                    }}
-                    style={{
-                      background: activeSort === opt.key ? 'var(--brand-surface-2)' : 'transparent',
-                      border: 0,
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '8px 12px',
-                      width: '100%',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      color: 'var(--brand-text)',
-                      fontSize: '14px',
-                      fontWeight: activeSort === opt.key ? '600' : '400',
-                      transition: 'background var(--dur-fast)'
                     }}
                   >
                     {t(opt.label, brandId)}

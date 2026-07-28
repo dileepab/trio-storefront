@@ -218,8 +218,9 @@ export default function ChatFAB({ brand }) {
 
   if (!open) {
     return (
-      <button className="fab" aria-label="Chat with us" onClick={() => setOpen(true)}>
-        <Icon name="msg" size={22}/>
+      <button className="fab" aria-label={chatTitle(brandId)} onClick={() => setOpen(true)}>
+        <span className="fab-icon"><Icon name="msg" size={20}/></span>
+        <span className="fab-label">{chatTitle(brandId)}</span>
       </button>
     );
   }

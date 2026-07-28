@@ -10,12 +10,14 @@ export default function TrustStrip({ brand }) {
   const items = ITEMS[brand] || ITEMS.modabella;
   return (
     <div className="trust">
-      {items.map(([ic, label]) => (
-        <div className="trust-item" key={label}>
-          <Icon name={ic} size={16}/>
-          <span>{label}</span>
-        </div>
-      ))}
+      <div className="trust-inner">
+        {items.map(([ic, label]) => (
+          <div className="trust-item" key={label}>
+            <Icon name={ic} size={16}/>
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
