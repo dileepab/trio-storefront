@@ -1,8 +1,9 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import ProductCard from '@/components/ProductCard';
 import PLPFilters from '@/components/PLPFilters';
 import { useI18n } from '@/lib/i18n';
+import { useAnnouncer } from '@/lib/announcer';
 
 function numericPrice(item) {
   if (typeof item.priceNumber === 'number') {
@@ -37,6 +38,7 @@ function matchesColor(item, activeColor) {
 
 export default function ShopPageClient({ brand, products, basePath }) {
   const { t } = useI18n();
+  const { announce } = useAnnouncer();
   const [activeSize, setActiveSize] = useState(null);
   const [activeColor, setActiveColor] = useState(null);
   const [activePriceRange, setActivePriceRange] = useState(null);
@@ -107,6 +109,26 @@ export default function ShopPageClient({ brand, products, basePath }) {
     setActiveSort('default');
   };
 
+  // Filtering rewrites the grid in place. The visible "N items" count changed
+  // but nothing was announced, so a screen reader user had no idea the results
+  // had moved under them. Skipped on first render — that is just the page load.
+  const isFirstRender = useRef(true);
+  const resultCount = sortedAndFilteredItems.length;
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    announce(
+      resultCount === 0
+        ? t('No items found matching your filters.', brand.id)
+        : `${resultCount} ${t('items', brand.id)}`
+    );
+    // `t` and `announce` are stable enough for this purpose; re-announcing on
+    // every render would be noise.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultCount, activeSize, activeColor, activePriceRange, activeSort]);
+
   return (
     <main className="plp-page">
       <div className="plp-head">
@@ -143,8 +165,10 @@ export default function ShopPageClient({ brand, products, basePath }) {
         </div>
       ) : (
         <div className="plp-grid" style={{ transition: 'opacity 0.2s ease-in-out' }}>
+          {/* h2: these sit directly under the page <h1>, with no rail heading
+              in between as there is on the brand home page. */}
           {sortedAndFilteredItems.map((p) => (
-            <ProductCard key={p.slug} brand={brand.id} basePath={basePath} {...p}/>
+            <ProductCard key={p.slug} brand={brand.id} basePath={basePath} {...p} headingLevel={2}/>
           ))}
         </div>
       )}

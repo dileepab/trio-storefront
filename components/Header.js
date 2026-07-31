@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
 import { useAuth } from '@/lib/authContext';
 import { useI18n } from '@/lib/i18n';
+import { useDialog } from '@/lib/useDialog';
 import { storefrontHref } from '@/lib/storefrontRouting';
 import AuthModal from './AuthModal';
 import ProfileDashboard from './ProfileDashboard';
@@ -18,6 +19,14 @@ export default function Header({ brand, basePath }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const drawerTitleId = useId();
+  const drawerLangId = useId();
+  const { panelRef: drawerRef, dialogProps: drawerDialogProps } = useDialog({
+    isOpen: mobileMenuOpen,
+    onClose: () => setMobileMenuOpen(false),
+    labelledBy: drawerTitleId,
+  });
 
   // Elevate the header subtly once the page scrolls past the hero edge
   useEffect(() => {
@@ -54,7 +63,7 @@ export default function Header({ brand, basePath }) {
         <img src={brand.logo} alt={brand.name}/>
       </Link>
       
-      <nav className="sf-nav sf-desktop-only">
+      <nav className="sf-nav sf-desktop-only" aria-label={formatText('Primary')}>
         {/* Lookbook active tag */}
         <Link href={storefrontHref(basePath, '/lookbook')} className="sf-nav-featured">
           ✨ {t('Shop the Look', brand.id)}
@@ -94,14 +103,16 @@ export default function Header({ brand, basePath }) {
           <Icon name="user"/>
         </button>
 
-        <button 
-          onClick={openCart} 
-          className="icon-btn cart-btn" 
-          aria-label="Cart"
+        {/* The count lives in the label, not just the pill: aria-label replaces
+            the button's content, so "Cart" alone hid the number from AT. */}
+        <button
+          onClick={openCart}
+          className="icon-btn cart-btn"
+          aria-label={cartCount > 0 ? `Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}` : 'Cart, empty'}
         >
           <Icon name="cart"/>
           {cartCount > 0 && (
-            <span className={`cart-pill ${justAddedId ? 'cart-pop-trigger' : ''}`}>
+            <span className={`cart-pill ${justAddedId ? 'cart-pop-trigger' : ''}`} aria-hidden="true">
               {cartCount}
             </span>
           )}
@@ -111,7 +122,12 @@ export default function Header({ brand, basePath }) {
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="mobile-drawer-overlay" onClick={() => setMobileMenuOpen(false)}>
-          <div className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="mobile-drawer"
+            ref={drawerRef}
+            {...drawerDialogProps}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mobile-drawer-head">
               {brand.logo ? (
                 <div className="mobile-drawer-logo">
@@ -122,22 +138,27 @@ export default function Header({ brand, basePath }) {
                   {formatText(brand.name)}
                 </span>
               )}
-              <button 
-                className="mobile-drawer-close" 
+              {/* Names the dialog for assistive tech without adding visible copy */}
+              <span id={drawerTitleId} className="visually-hidden">
+                {formatText(`${brand.name} menu`)}
+              </span>
+              <button
+                className="mobile-drawer-close"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
               >
-                ×
+                <span aria-hidden="true">×</span>
               </button>
             </div>
-            
+
             <div className="mobile-drawer-body">
               {/* Language Selector */}
               <div className="mobile-drawer-section">
-                <label className="caption mobile-drawer-label">
+                <label className="caption mobile-drawer-label" htmlFor={drawerLangId}>
                   {formatText('Select Language')}
                 </label>
                 <select
+                  id={drawerLangId}
                   value={locale}
                   onChange={(e) => {
                     changeLocale(e.target.value);
@@ -147,16 +168,17 @@ export default function Header({ brand, basePath }) {
                 >
                   <option value="en">English (EN)</option>
                   <option value="si">සිංහල (Sinhala)</option>
-                  <option value="ta">தமிழ் (Tamil)</option>
+                  <option value="ta">தமிழ් (Tamil)</option>
                 </select>
               </div>
 
               {/* Navigation Links */}
               <div className="mobile-drawer-section">
-                <label className="caption mobile-drawer-label">
+                {/* <label> is only for form controls — this heads a <nav> */}
+                <h2 className="caption mobile-drawer-label">
                   {formatText('Categories')}
-                </label>
-                <nav className="mobile-drawer-nav">
+                </h2>
+                <nav className="mobile-drawer-nav" aria-label={formatText('Categories')}>
                   <Link
                     href={storefrontHref(basePath, '/lookbook')}
                     onClick={() => setMobileMenuOpen(false)}

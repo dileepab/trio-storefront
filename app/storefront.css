@@ -19,7 +19,15 @@ body {
   flex-direction: column;
 }
 
-.brand-root>main {
+/* #main-content is the skip-link target wrapping the routed page, so it is the
+   direct flex child now — the <main> inside it no longer is. */
+.brand-root>#main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-root>#main-content>main {
   flex: 1;
 }
 
@@ -421,9 +429,10 @@ button {
   max-width: 18ch;
 }
 
+/* No opacity here. --brand-hero-ink is already tuned against the gradient;
+   fading it to .82 dropped Cleopatra's sub-head to 4.44:1 at mobile widths. */
 .hero-sub {
   margin: 0;
-  opacity: 0.82;
   font-size: 16px;
   max-width: 46ch;
 }
@@ -621,12 +630,36 @@ button {
    to redeclare them, so the two definitions silently competed on load order. */
 
 /* ===== Product card ===== */
+/* The card is a plain container, not a link. The product title holds the only
+   anchor and stretches an invisible ::after across the whole card for the
+   click target, so the save and quick-add buttons are siblings of the link
+   rather than illegal interactive descendants of it. */
 .p-card {
   display: block;
+  position: relative;
   background: var(--brand-surface);
   border-radius: var(--radius);
   overflow: hidden;
   transition: box-shadow var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+}
+
+.p-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.p-title-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* The title link keeps its own focus ring — drawn around the title text, which
+   is guaranteed to render everywhere. The card lift is an additional cue, not
+   the indicator itself, so focus stays visible even without :has() support. */
+.p-card:focus-within {
+  box-shadow: var(--shadow-lift);
 }
 
 .p-card:hover {
@@ -650,7 +683,13 @@ button {
 .p-img {
   aspect-ratio: 4/5;
   position: relative;
+  /* `clip` rather than `hidden` where supported: `hidden` makes this a
+     programmatically scrollable box, so tabbing to the quick-add panel parked
+     just past its bottom edge made the browser scroll the photograph 80px out
+     of frame (taking the sale tag with it) and leave it there. `clip` cannot
+     scroll. `hidden` stays first as the fallback for older Safari. */
   overflow: hidden;
+  overflow: clip;
 }
 
 .p-img img,
@@ -704,15 +743,19 @@ button {
   border-top: 1px solid var(--brand-border-subtle);
   transform: translateY(100%);
   transition: transform var(--dur-slow) var(--ease-out);
-  z-index: 3;
+  /* Above .p-body (3), because the title link's stretched ::after lives in
+     that stacking context and would otherwise swallow these clicks. */
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
 }
 
-/* Slide up on card hover */
-.p-card:hover .p-quick-add {
+/* Slide up on card hover — and on keyboard focus, so the panel is on screen
+   before a tab lands inside it rather than after. */
+.p-card:hover .p-quick-add,
+.p-card:focus-within .p-quick-add {
   transform: translateY(0);
 }
 
@@ -818,16 +861,17 @@ button {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  background: color-mix(in srgb, var(--brand-accent) 92%, transparent);
+  /* Opaque: these sit over photography, so a translucent fill made the label's
+     contrast a property of whatever image happened to load behind it. */
+  background: var(--brand-accent);
   color: var(--brand-text);
   box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   z-index: 2;
+  pointer-events: none;
 }
 
 [data-brand="cleopatra"] .p-tag {
-  background: rgba(251, 246, 236, 0.95);
+  background: #FBF6EC;
   color: var(--brand-primary);
   border-radius: 0;
   font-size: 9px;
@@ -852,9 +896,8 @@ button {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   line-height: 1;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
 }
 
 .p-stock::before {
@@ -866,12 +909,12 @@ button {
 }
 
 .p-stock--low {
-  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
+  background: var(--brand-surface);
   color: var(--status-warning);
 }
 
 .p-stock--out {
-  background: color-mix(in srgb, var(--brand-text) 84%, transparent);
+  background: var(--brand-text);
   color: var(--brand-surface);
 }
 
@@ -893,12 +936,13 @@ button {
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-surface) 88%, transparent);
+  background: var(--brand-surface);
   color: var(--brand-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
+  /* Above the title link's stretched ::after (see .p-quick-add) */
+  z-index: 5;
   box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.16);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -943,12 +987,14 @@ button {
   margin-bottom: 4px;
 }
 
+/* An <h3> since this names the product — resets the UA heading margins */
 .p-title {
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 500;
   color: var(--brand-text);
   line-height: 1.4;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
 }
 
 [data-brand="cleopatra"] .p-title {
@@ -1012,7 +1058,7 @@ button {
   padding: 0 14px;
   border-radius: 999px;
   background: var(--brand-surface);
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -1112,7 +1158,7 @@ button {
 
 /* Pale swatches need an outline or they vanish against the panel */
 .filter-swatch--pale {
-  border: 1px solid var(--brand-border);
+  border: 1px solid var(--brand-border-strong);
 }
 
 .animate-fade-in {
@@ -1213,7 +1259,7 @@ button {
 }
 
 .pdp-badge--out {
-  background: color-mix(in srgb, var(--brand-text) 84%, transparent);
+  background: var(--brand-text);
   color: var(--brand-surface);
 }
 
@@ -1238,7 +1284,7 @@ button {
   width: 64px;
   height: 80px;
   padding: 0;
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--brand-surface-2);
@@ -1370,7 +1416,7 @@ button {
   justify-content: center;
   cursor: pointer;
   /* Ring lives on the button, dot on the child, so selection never nudges layout */
-  box-shadow: inset 0 0 0 1px var(--brand-border-subtle);
+  box-shadow: inset 0 0 0 1px var(--brand-border-strong);
   transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
@@ -1382,7 +1428,7 @@ button {
 }
 
 .swatch--pale .swatch-dot {
-  box-shadow: inset 0 0 0 1px var(--brand-border);
+  box-shadow: inset 0 0 0 1px var(--brand-border-strong);
 }
 
 .swatch:hover {
@@ -1411,7 +1457,7 @@ button {
   height: 44px;
   border-radius: var(--radius);
   background: var(--brand-surface);
-  border: 1px solid var(--brand-border);
+  border: 1px solid var(--brand-border-strong);
   font-size: 13px;
   font-weight: 500;
   color: var(--brand-text);
@@ -1519,7 +1565,7 @@ button {
   height: 48px;
   border-radius: var(--radius);
   background: var(--brand-surface);
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1673,7 +1719,7 @@ button {
 .qty {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   border-radius: var(--radius-pill);
   background: var(--brand-surface);
   overflow: hidden;
@@ -1755,10 +1801,14 @@ button {
   overflow: hidden;
 }
 
+/* Ran from --brand-accent, whose leading edge measured 1.35:1 against the
+   track on Happy Buy and 1.67:1 on Modabella — at low progress the filled
+   portion was indistinguishable from the empty one. Both ends are now drawn
+   from the primary, which clears 3:1 against the track in every skin. */
 .ship-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand-accent), var(--brand-primary));
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-primary-hover));
   transition: width var(--dur-slow) var(--ease-out);
 }
 
@@ -1788,7 +1838,7 @@ button {
   gap: 2px;
   min-height: var(--tap-min);
   padding: 10px 12px;
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   border-radius: var(--radius);
   background: var(--brand-surface);
   color: var(--brand-text);
@@ -1872,7 +1922,8 @@ button {
   padding: 48px 24px;
 }
 
-.sf-footer-inner>div {
+.sf-footer-inner>div,
+.sf-footer-inner>nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1889,13 +1940,15 @@ button {
   max-width: 240px;
 }
 
+/* An <h2> heading each footer nav — resets the UA heading margin/size */
 .sf-footer-label {
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--brand-muted);
-  margin-bottom: 8px;
+  margin: 0 0 8px;
 }
 
 .sf-footer-inner a {
@@ -2045,9 +2098,18 @@ button {
   font-size: 14px;
 }
 
+/* Solid rather than opacity: .78 faded this to 3.60:1 on Happy Buy's primary */
 .chat-sub {
   font-size: 11px;
-  opacity: 0.78;
+}
+
+/* Timestamps under each bubble. Previously 9px inline-styled at opacity .75,
+   which measured 3.24:1 — below AA for text this small. */
+.chat-time {
+  font-size: 11px;
+  color: var(--brand-muted);
+  margin-top: 2px;
+  padding: 0 4px;
 }
 
 .chat-close {
@@ -2213,7 +2275,7 @@ button {
 
 .chat-input input {
   flex: 1;
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   border-radius: 999px;
   height: 34px;
   padding: 0 12px;
@@ -2391,10 +2453,14 @@ button {
   color: var(--brand-border);
 }
 
+/* A <ul> so the bag is announced as a list with a count */
 .cart-drawer-list {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .cart-drawer-line {
@@ -2532,7 +2598,7 @@ button {
 .lang-picker {
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   background: var(--brand-surface-2);
   color: var(--brand-text);
   font-size: 11px;
@@ -2701,7 +2767,7 @@ button {
   flex: 1;
   height: 28px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   background: var(--brand-surface);
   font-size: 11px;
   font-weight: 600;
@@ -2906,7 +2972,7 @@ button {
   flex: 1;
   height: 36px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   background: var(--brand-surface);
   font-weight: 600;
   font-size: 12px;
@@ -2927,7 +2993,7 @@ button {
   justify-content: center;
   gap: 8px;
   height: 48px;
-  border: 1px dashed var(--brand-border);
+  border: 1px dashed var(--brand-border-strong);
   border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
@@ -3101,15 +3167,27 @@ button {
   border-bottom: 1px solid var(--brand-border-subtle);
 }
 
+/* Real <button role="tab"> elements now, so reset the UA chrome and keep only
+   the underline that marks the active tab. */
 .auth-tab {
   flex: 1;
   text-align: center;
   padding: 14px;
   cursor: pointer;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 14px;
+  color: var(--brand-text);
+  background: transparent;
+  border: 0;
   border-bottom: 2px solid transparent;
-  transition: all var(--dur-fast);
+  transition: color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.auth-tab:hover {
+  background: var(--brand-surface-2);
 }
 
 .auth-tab.active {
@@ -3159,7 +3237,7 @@ button {
 .form-input {
   height: 40px;
   border-radius: var(--radius);
-  border: 1px solid var(--brand-border-subtle);
+  border: 1px solid var(--brand-border-strong);
   padding: 0 12px;
   font: inherit;
   background: var(--brand-bg);
@@ -3242,7 +3320,8 @@ button {
 
 .order-status-badge.shipped {
   background: color-mix(in srgb, var(--brand-accent) 25%, transparent);
-  color: var(--brand-primary);
+  /* --brand-primary measured 4.43:1 on this wash for Happy Buy */
+  color: var(--brand-text);
   border: 1px solid var(--brand-border-subtle);
 }
 
@@ -3359,9 +3438,11 @@ button {
   flex-direction: column;
 }
 
+/* An <h2> for the nav section — resets the UA heading margin/size */
 .mobile-drawer-label {
   display: block;
-  margin-bottom: 10px;
+  margin: 0 0 10px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;

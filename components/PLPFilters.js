@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import Icon from './Icon';
 import { useI18n } from '@/lib/i18n';
 import { colorHex, isPale } from '@/lib/colors';
@@ -21,6 +21,10 @@ export default function PLPFilters({
   const { t } = useI18n();
   const [openPanel, setOpenPanel] = useState(null); // 'size', 'color', 'price', 'sort', or null
   const panelRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const chipRefs = useRef({});
+  const uid = useId();
+  const panelId = (key) => `${uid}-panel-${key}`;
 
   // Close panel on outside click
   useEffect(() => {
@@ -33,9 +37,40 @@ export default function PLPFilters({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Escape closes the open panel and hands focus back to its chip, which is
+  // the only way out for a keyboard user who is not going to click elsewhere.
+  useEffect(() => {
+    if (!openPanel) return;
+    function handleKeyDown(event) {
+      if (event.key !== 'Escape') return;
+      const key = openPanel;
+      setOpenPanel(null);
+      chipRefs.current[key]?.focus();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [openPanel]);
+
+  // Move focus into the panel when it opens, so the options are the next thing
+  // a keyboard user reaches rather than the chip after it.
+  useEffect(() => {
+    if (!openPanel || openPanel === 'filters') return;
+    const first = dropdownRef.current?.querySelector('button');
+    first?.focus();
+  }, [openPanel]);
+
   const togglePanel = (panel) => {
     setOpenPanel(prev => prev === panel ? null : panel);
   };
+
+  // Shared disclosure wiring for each filter chip
+  const chipProps = (key) => ({
+    type: 'button',
+    ref: (el) => { chipRefs.current[key] = el; },
+    'aria-expanded': openPanel === key,
+    'aria-haspopup': 'true',
+    'aria-controls': openPanel === key ? panelId(key) : undefined,
+  });
 
   const sizeOptions = availableSizes.length > 0 ? availableSizes : ['XS', 'S', 'M', 'L', 'XL'];
   const colorSwatches = availableColors.length > 0
@@ -92,55 +127,61 @@ export default function PLPFilters({
     <div className="plp-filters-wrapper" ref={panelRef} style={{ position: 'relative', zIndex: 10 }}>
       <div className="plp-filters">
         {/* All Filters Button / Reset badge */}
-        <button 
+        <button
+          type="button"
           className={`chip ${hasActiveFilters ? 'is-active' : ''}`}
           onClick={hasActiveFilters ? onClear : () => togglePanel('filters')}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <Icon name="filter" size={14}/> 
+          <Icon name="filter" size={14}/>
           {hasActiveFilters ? `${t('Clear all', brandId)}` : t('Filters', brandId)}
         </button>
 
         {/* Size Filter Chip */}
-        <button 
+        <button
+          {...chipProps('size')}
           className={`chip ${activeSize ? 'is-active' : ''}`}
           onClick={() => togglePanel('size')}
         >
           {activeSize ? `${t('Size', brandId)}: ${activeSize}` : t('Size', brandId)}
-          <span style={{ display: 'inline-flex', transform: openPanel === 'size' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
+          <span aria-hidden="true" style={{ display: 'inline-flex', transform: openPanel === 'size' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
             <Icon name="chevron-d" size={14}/>
           </span>
         </button>
 
         {/* Color Filter Chip */}
-        <button 
+        <button
+          {...chipProps('color')}
           className={`chip ${activeColor ? 'is-active' : ''}`}
           onClick={() => togglePanel('color')}
         >
           {activeColor ? `${t('Color', brandId)}: ${t(activeColor, brandId)}` : t('Color', brandId)}
-          <span style={{ display: 'inline-flex', transform: openPanel === 'color' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
+          <span aria-hidden="true" style={{ display: 'inline-flex', transform: openPanel === 'color' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
             <Icon name="chevron-d" size={14}/>
           </span>
         </button>
 
         {/* Price Filter Chip */}
-        <button 
+        <button
+          {...chipProps('price')}
           className={`chip ${activePriceRange ? 'is-active' : ''}`}
           onClick={() => togglePanel('price')}
         >
           {activePriceRange ? `${t('Price', brandId)}: ${t(priceRanges.find(r => r.key === activePriceRange)?.label, brandId)}` : t('Price', brandId)}
-          <span style={{ display: 'inline-flex', transform: openPanel === 'price' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
+          <span aria-hidden="true" style={{ display: 'inline-flex', transform: openPanel === 'price' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
             <Icon name="chevron-d" size={14}/>
           </span>
         </button>
 
         {/* Sort Chip */}
-        <button 
+        <button
+          {...chipProps('sort')}
           className={`chip ml-auto ${activeSort !== 'default' ? 'is-active' : ''}`}
           onClick={() => togglePanel('sort')}
         >
+          <span className="visually-hidden">{t('Sort by', brandId)}: </span>
           {t(sortOptions.find(o => o.key === activeSort)?.label, brandId)}
-          <span style={{ display: 'inline-flex', transform: openPanel === 'sort' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
+          <span aria-hidden="true" style={{ display: 'inline-flex', transform: openPanel === 'sort' ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast)' }}>
             <Icon name="chevron-d" size={14}/>
           </span>
         </button>
@@ -149,6 +190,16 @@ export default function PLPFilters({
       {/* Floating Glassmorphic Dropdowns */}
       {openPanel && openPanel !== 'filters' && (
         <div
+          ref={dropdownRef}
+          id={panelId(openPanel)}
+          role="group"
+          aria-label={t(
+            openPanel === 'size' ? 'Select size'
+              : openPanel === 'color' ? 'Select color'
+              : openPanel === 'price' ? 'Select price range'
+              : 'Sort by',
+            brandId
+          )}
           className={`filter-dropdown animate-fade-in ${openPanel === 'sort' ? 'filter-dropdown--end' : 'filter-dropdown--start'}`}
         >
           {/* SIZE PANEL */}
@@ -158,7 +209,9 @@ export default function PLPFilters({
               <div className="size-row">
                 {sizeOptions.map(sz => (
                   <button
+                    type="button"
                     key={sz}
+                    aria-pressed={activeSize === sz}
                     className={`size-pill ${activeSize === sz ? 'is-on' : ''}`}
                     onClick={() => {
                       setActiveSize(prev => prev === sz ? null : sz);
@@ -179,7 +232,9 @@ export default function PLPFilters({
               <div className="filter-option-list">
                 {colorSwatches.map(sw => (
                   <button
+                    type="button"
                     key={sw.name}
+                    aria-pressed={activeColor === sw.name}
                     className={`filter-option ${activeColor === sw.name ? 'is-on' : ''}`}
                     onClick={() => {
                       setActiveColor(prev => prev === sw.name ? null : sw.name);
@@ -187,6 +242,7 @@ export default function PLPFilters({
                     }}
                   >
                     <span
+                      aria-hidden="true"
                       className={`filter-swatch ${isPale(sw.hex) ? 'filter-swatch--pale' : ''}`}
                       style={{ background: sw.hex }}
                     />
@@ -204,7 +260,9 @@ export default function PLPFilters({
               <div className="filter-option-list">
                 {priceRanges.map(pr => (
                   <button
+                    type="button"
                     key={pr.key}
+                    aria-pressed={activePriceRange === pr.key}
                     className={`filter-option ${activePriceRange === pr.key ? 'is-on' : ''}`}
                     onClick={() => {
                       setActivePriceRange(prev => prev === pr.key ? null : pr.key);
@@ -225,7 +283,9 @@ export default function PLPFilters({
               <div className="filter-option-list">
                 {sortOptions.map(opt => (
                   <button
+                    type="button"
                     key={opt.key}
+                    aria-pressed={activeSort === opt.key}
                     className={`filter-option ${activeSort === opt.key ? 'is-on' : ''}`}
                     onClick={() => {
                       setActiveSort(opt.key);

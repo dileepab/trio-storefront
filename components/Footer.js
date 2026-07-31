@@ -14,23 +14,25 @@ export default function Footer({ brand }) {
             {brand.id === 'modabella' && 'considered tailoring, made in colombo.'}
           </p>
         </div>
-        <div>
-          <div className="sf-footer-label">{t('Shop')}</div>
+        {/* Each column is a labelled nav so the groups are distinguishable
+            rather than one undifferentiated run of links. */}
+        <nav aria-label={t('Shop')}>
+          <h2 className="sf-footer-label">{t('Shop')}</h2>
           <a href="#">{t('New')}</a>
           <a href="#">{t('Sale')}</a>
           <a href="#">{t('Brands')}</a>
-        </div>
-        <div>
-          <div className="sf-footer-label">{t('Help')}</div>
+        </nav>
+        <nav aria-label={t('Help')}>
+          <h2 className="sf-footer-label">{t('Help')}</h2>
           <a href="#">{t('Shipping')}</a>
           <a href="#">{t('Returns')}</a>
           <a href="#">{t('Size guide')}</a>
-        </div>
-        <div>
-          <div className="sf-footer-label">{t('Follow')}</div>
+        </nav>
+        <nav aria-label={t('Follow')}>
+          <h2 className="sf-footer-label">{t('Follow')}</h2>
           <a href="#"><Icon name="msg" size={14}/> Messenger</a>
           <a href="#"><Icon name="msg" size={14}/> WhatsApp</a>
-        </div>
+        </nav>
       </div>
       <div className="sf-footer-base">
         <span>© 2026 {brand.name}</span>

@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useCart } from '@/lib/cartContext';
 import { useAuth } from '@/lib/authContext';
+import { useDialog } from '@/lib/useDialog';
 import Icon from './Icon';
 import AuthModal from './AuthModal';
 import PayToggle from './PayToggle';
@@ -11,10 +12,18 @@ import { shippingFor } from '@/lib/shipping';
 export default function CartDrawer({ brand }) {
   const { cartItems, isOpen, closeCart, updateQty, removeFromCart, placeOrder } = useCart();
   const { currentUser } = useAuth();
-  
+
   const [payMethod, setPayMethod] = useState('COD');
   const [orderSuccessNum, setOrderSuccessNum] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
+
+  const uid = useId();
+  const titleId = `${uid}-title`;
+  const { panelRef, dialogProps } = useDialog({
+    isOpen,
+    onClose: closeCart,
+    labelledBy: titleId,
+  });
 
   if (!isOpen) return null;
 
@@ -53,32 +62,39 @@ export default function CartDrawer({ brand }) {
   return (
     <div className="cart-drawer-overlay" onClick={closeCart}>
       {/* Drawer Panel */}
-      <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="cart-drawer"
+        ref={panelRef}
+        {...dialogProps}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="cart-drawer-head">
           <div>
-            <h2 className="h3 cart-drawer-title">{formatText('Shopping Bag')}</h2>
+            <h2 className="h3 cart-drawer-title" id={titleId}>{formatText('Shopping Bag')}</h2>
             <span className="caption">
               {orderSuccessNum ? '0' : cartItems.length} {formatText('unique items')}
             </span>
           </div>
-          <button className="cart-drawer-close" onClick={closeCart} aria-label="Close cart">
-            ×
+          <button type="button" className="cart-drawer-close" onClick={closeCart} aria-label={formatText('Close cart')}>
+            <span aria-hidden="true">×</span>
           </button>
         </div>
 
         {/* List (Scrollable) */}
         <div className="cart-drawer-body">
           {orderSuccessNum ? (
-            /* Order Success View */
-            <div className="cart-drawer-empty" style={{ gap: '16px', margin: 'auto', padding: '10px 0' }}>
+            /* Order Success View — role="status" so the confirmation and the
+               order number are announced, not just painted. */
+            <div className="cart-drawer-empty" role="status" style={{ gap: '16px', margin: 'auto', padding: '10px 0' }}>
               <div 
                 style={{ 
                   width: '64px', height: '64px', borderRadius: '50%', 
                   background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'var(--brand-primary)', fontSize: '28px', margin: '0 auto 8px' 
+                  color: 'var(--brand-primary)', fontSize: '28px', margin: '0 auto 8px'
                 }}
+                aria-hidden="true"
               >
                 ✓
               </div>
@@ -122,15 +138,15 @@ export default function CartDrawer({ brand }) {
             </div>
           ) : (
             /* Items List */
-            <div className="cart-drawer-list">
+            <ul className="cart-drawer-list">
               {cartItems.map((item) => (
-                <div className="cart-drawer-line" key={item.key}>
+                <li className="cart-drawer-line" key={item.key}>
                   {/* Left: Garment Image or Swatch Gradient */}
                   <div className="cart-drawer-img-container">
                     {item.image ? (
-                      <img 
-                        src={item.image} 
-                        alt={item.title} 
+                      <img
+                        src={item.image}
+                        alt=""
                         className="cart-drawer-img object-cover"
                       />
                     ) : (
@@ -145,12 +161,13 @@ export default function CartDrawer({ brand }) {
                   <div className="cart-drawer-info">
                     <div className="cart-drawer-line-top">
                       <div className="cart-drawer-name">{formatText(item.title)}</div>
-                      <button 
-                        className="cart-drawer-delete" 
+                      <button
+                        type="button"
+                        className="cart-drawer-delete"
                         onClick={() => removeFromCart(item.key)}
-                        aria-label="Remove item"
+                        aria-label={`${formatText('Remove')} ${formatText(item.title)}, ${formatText('size')} ${item.size}`}
                       >
-                        🗑
+                        <span aria-hidden="true">🗑</span>
                       </button>
                     </div>
                     
@@ -160,17 +177,33 @@ export default function CartDrawer({ brand }) {
                     </div>
 
                     <div className="cart-drawer-row">
+                      {/* "−" / "+" alone told a screen reader nothing about
+                          what was being changed, or of which item. */}
                       <div className="qty cart-drawer-qty">
-                        <button onClick={() => updateQty(item.key, -1)}>−</button>
-                        <span>{item.qty}</span>
-                        <button onClick={() => updateQty(item.key, 1)}>+</button>
+                        <button
+                          type="button"
+                          onClick={() => updateQty(item.key, -1)}
+                          aria-label={`${formatText('Decrease quantity of')} ${formatText(item.title)}`}
+                        >
+                          <span aria-hidden="true">−</span>
+                        </button>
+                        <span aria-live="polite" aria-atomic="true">
+                          <span className="visually-hidden">{formatText('Quantity')}: </span>{item.qty}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQty(item.key, 1)}
+                          aria-label={`${formatText('Increase quantity of')} ${formatText(item.title)}`}
+                        >
+                          <span aria-hidden="true">+</span>
+                        </button>
                       </div>
                       <span className="price">LKR {fmt(item.price * item.qty)}</span>
                     </div>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
 

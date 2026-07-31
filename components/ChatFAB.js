@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Icon from './Icon';
 import { useAuth } from '@/lib/authContext';
 import { usePageContext } from '@/lib/pageContext';
+import { useDialog } from '@/lib/useDialog';
 
 function getOrCreateSenderId() {
   const key = 'trio_storefront_chat_sender_id';
@@ -82,6 +83,25 @@ export default function ChatFAB({ brand }) {
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [activePreviewImageUrl, setActivePreviewImageUrl] = useState(null);
   const bodyRef = useRef(null);
+
+  const uid = useId();
+  const titleId = `${uid}-title`;
+  const previewTitleId = `${uid}-preview-title`;
+
+  // Non-modal: a shopper should be able to leave the chat open and keep
+  // browsing, so this panel gets a name, Escape and focus handling but no
+  // focus trap and no inert page behind it.
+  const { panelRef, dialogProps } = useDialog({
+    isOpen: open,
+    onClose: () => setOpen(false),
+    labelledBy: titleId,
+    modal: false,
+  });
+  const { panelRef: previewRef, dialogProps: previewDialogProps } = useDialog({
+    isOpen: !!activePreviewImageUrl,
+    onClose: () => setActivePreviewImageUrl(null),
+    labelledBy: previewTitleId,
+  });
 
   const canSend = input.trim().length > 0 && !sending;
 
@@ -226,15 +246,27 @@ export default function ChatFAB({ brand }) {
   }
 
   return (
-    <div className="chat-panel">
+    <div className="chat-panel" ref={panelRef} {...dialogProps}>
       <div className="chat-head">
         <div>
-          <div className="chat-title">{chatTitle(brandId)}</div>
-          <div className="chat-sub">{sending ? 'Typing...' : 'AI assistant online'}</div>
+          <div className="chat-title" id={titleId}>{chatTitle(brandId)}</div>
+          {/* role="status" so "Typing…" reaches a screen reader too */}
+          <div className="chat-sub" role="status">{sending ? 'Typing...' : 'AI assistant online'}</div>
         </div>
-        <button className="chat-close" onClick={() => setOpen(false)} aria-label="Close">×</button>
+        <button type="button" className="chat-close" onClick={() => setOpen(false)} aria-label="Close chat">
+          <span aria-hidden="true">×</span>
+        </button>
       </div>
-      <div className="chat-body" ref={bodyRef}>
+      {/* A live log: assistant replies arrive asynchronously and were
+          previously announced to nobody. */}
+      <div
+        className="chat-body"
+        ref={bodyRef}
+        role="log"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-label="Conversation"
+      >
         {messages.map((message) => (
           <div 
             key={message.id} 
@@ -251,14 +283,18 @@ export default function ChatFAB({ brand }) {
               {message.imageUrls?.length > 0 && (
                 <div className="chat-media-grid">
                   {message.imageUrls.map((imageUrl) => (
-                    <div 
-                      key={imageUrl} 
-                      onClick={() => setActivePreviewImageUrl(imageUrl)} 
-                      title="Click to zoom size chart" 
-                      style={{ cursor: 'zoom-in', display: 'block' }}
+                    /* A <button>, not a click-handling <div> — this was the
+                       only way to enlarge a size chart and it was reachable
+                       by mouse alone. */
+                    <button
+                      type="button"
+                      key={imageUrl}
+                      onClick={() => setActivePreviewImageUrl(imageUrl)}
+                      aria-label={formatText('Enlarge attached image')}
+                      style={{ cursor: 'zoom-in', display: 'block', padding: 0, border: 0, background: 'none', width: '100%' }}
                     >
-                      <img src={imageUrl} alt="Chat attachment" className="chat-media" style={{ display: 'block' }}/>
-                    </div>
+                      <img src={imageUrl} alt="" className="chat-media" style={{ display: 'block' }}/>
+                    </button>
                   ))}
                 </div>
               )}
@@ -266,7 +302,7 @@ export default function ChatFAB({ brand }) {
                 <div className="chat-product-list">
                   {message.carouselProducts.slice(0, 4).map((product) => (
                     <div key={product.id} className="chat-product">
-                      {product.imageUrl && <img src={product.imageUrl} alt={product.name}/>}
+                      {product.imageUrl && <img src={product.imageUrl} alt=""/>}
                       <div>
                         <div className="chat-product-name">{product.name}</div>
                         <div className="caption">LKR {Number(product.price).toLocaleString('en-LK')}</div>
@@ -278,16 +314,11 @@ export default function ChatFAB({ brand }) {
               )}
             </div>
             {message.time && (
-              <span 
-                className="chat-time" 
-                style={{ 
-                  fontSize: '9px', 
-                  color: 'var(--brand-muted)', 
-                  opacity: 0.75,
-                  marginTop: '2px', 
-                  padding: '0 4px', 
-                  alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start' 
-                }}
+              /* Styling moved to .chat-time — inline it was 9px at opacity .75,
+                 which measured 3.24:1 against the panel. */
+              <span
+                className="chat-time"
+                style={{ alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start' }}
               >
                 {message.time}
               </span>
@@ -315,13 +346,22 @@ export default function ChatFAB({ brand }) {
         )}
       </div>
       <form className="chat-input" onSubmit={sendMessage}>
+        {/* A placeholder is not an accessible name — it disappears on input
+            and is not reliably announced. */}
+        <label className="visually-hidden" htmlFor={`${uid}-input`}>
+          {formatText('Type a message')}
+        </label>
         <input
+          id={`${uid}-input`}
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder="Type a message..."
           maxLength={1000}
+          data-autofocus
         />
-        <button className="chat-send" aria-label="Send" disabled={!canSend}>→</button>
+        <button type="submit" className="chat-send" aria-label="Send message" disabled={!canSend}>
+          <span aria-hidden="true">→</span>
+        </button>
       </form>
 
       {/* Image Preview Backdrop Modal */}
@@ -331,14 +371,16 @@ export default function ChatFAB({ brand }) {
           onClick={() => setActivePreviewImageUrl(null)} 
           style={{ zIndex: 110, padding: '20px' }}
         >
-          <div 
-            style={{ 
-              position: 'relative', 
-              maxWidth: '90%', 
-              maxHeight: '90%', 
-              background: 'var(--brand-surface)', 
-              borderRadius: 'var(--radius-lg)', 
-              padding: '8px', 
+          <div
+            ref={previewRef}
+            {...previewDialogProps}
+            style={{
+              position: 'relative',
+              maxWidth: '90%',
+              maxHeight: '90%',
+              background: 'var(--brand-surface)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '8px',
               boxShadow: 'var(--shadow-lift)',
               border: '1px solid var(--brand-border-subtle)',
               animation: 'scaleIn 0.3s var(--ease-out) forwards',
@@ -348,32 +390,36 @@ export default function ChatFAB({ brand }) {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button 
-              onClick={() => setActivePreviewImageUrl(null)} 
-              style={{ 
-                position: 'absolute', top: '-16px', right: '-16px', 
-                width: '32px', height: '32px', borderRadius: '50%', 
-                background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)', 
-                border: 0, fontSize: '20px', display: 'flex', alignItems: 'center', 
-                justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' 
+            <h2 id={previewTitleId} className="visually-hidden">
+              {formatText('Image preview')}
+            </h2>
+            <button
+              type="button"
+              onClick={() => setActivePreviewImageUrl(null)}
+              style={{
+                position: 'absolute', top: '-16px', right: '-16px',
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)',
+                border: 0, fontSize: '20px', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
               }}
-              aria-label="Close preview"
+              aria-label={formatText('Close preview')}
             >
-              ×
+              <span aria-hidden="true">×</span>
             </button>
-            <img 
-              src={activePreviewImageUrl} 
-              alt="Size chart preview" 
-              style={{ 
-                maxWidth: '100%', 
-                maxHeight: '80vh', 
-                borderRadius: 'var(--radius)', 
+            <img
+              src={activePreviewImageUrl}
+              alt={formatText('Enlarged attachment')}
+              style={{
+                maxWidth: '100%',
+                maxHeight: '80vh',
+                borderRadius: 'var(--radius)',
                 objectFit: 'contain',
                 display: 'block'
-              }} 
+              }}
             />
             <div className="caption" style={{ marginTop: '8px', fontWeight: '500', color: 'var(--brand-muted)' }}>
-              {formatText('Click anywhere to close')}
+              {formatText('Press Escape or click anywhere to close')}
             </div>
           </div>
         </div>

@@ -43,7 +43,7 @@ export default function Cart({ brand, basePath }) {
           <div className="cart-line" key={it.key}>
             <div className="cart-img-container" style={{ width: '80px', height: '100px', overflow: 'hidden', borderRadius: 'var(--radius-sm)' }}>
               {it.image ? (
-                <img src={it.image} alt={it.title} className="object-cover w-full h-full" />
+                <img src={it.image} alt="" className="object-cover w-full h-full" />
               ) : (
                 <div className="cart-img" style={{ width: '100%', height: '100%', background: `linear-gradient(160deg, ${it.swatchA}, ${it.swatchB})` }}/>
               )}
@@ -65,9 +65,23 @@ export default function Cart({ brand, basePath }) {
               </div>
               <div className="cart-row">
                 <div className="qty">
-                  <button onClick={() => updateQty(it.key, -1)}>−</button>
-                  <span>{it.qty}</span>
-                  <button onClick={() => updateQty(it.key, +1)}>+</button>
+                  <button
+                    type="button"
+                    onClick={() => updateQty(it.key, -1)}
+                    aria-label={`${formatText('Decrease quantity of')} ${formatText(it.title)}`}
+                  >
+                    <span aria-hidden="true">−</span>
+                  </button>
+                  <span aria-live="polite" aria-atomic="true">
+                    <span className="visually-hidden">{formatText('Quantity')}: </span>{it.qty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => updateQty(it.key, +1)}
+                    aria-label={`${formatText('Increase quantity of')} ${formatText(it.title)}`}
+                  >
+                    <span aria-hidden="true">+</span>
+                  </button>
                 </div>
                 <span className="price">LKR {fmt(it.price * it.qty)}</span>
               </div>

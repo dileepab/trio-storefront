@@ -1,6 +1,11 @@
 // Tiny inline icon set (Lucide-style strokes).
+// Every icon here is decorative — each one sits inside a button or link that
+// already carries its own text or aria-label, so exposing the SVG to assistive
+// tech would only duplicate that. aria-hidden keeps them out of the
+// accessibility tree; focusable="false" keeps IE/legacy Edge from tabbing to
+// them. Applied here once rather than at ~20 call sites.
 const I = ({ children, size = 20, fill = 'none' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{children}</svg>
 );
 
 export default function Icon({ name, size = 20, fill = 'none' }) {
@@ -17,7 +22,7 @@ export default function Icon({ name, size = 20, fill = 'none' }) {
     case 'truck':    return <I size={size}><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></I>;
     case 'shield':   return <I size={size}><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></I>;
     case 'rotate':   return <I size={size}><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/></I>;
-    case 'msg':      return <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor"><path d="M12 2C6.5 2 2 6.1 2 11.2c0 2.9 1.5 5.5 3.8 7.2V22l3.4-1.9c.9.2 1.8.4 2.8.4 5.5 0 10-4.1 10-9.3S17.5 2 12 2zm1 12.4l-2.5-2.7L5.5 14.4l5.5-5.8 2.6 2.7 4.9-2.7-5.5 5.8z"/></svg>;
+    case 'msg':      return <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 2C6.5 2 2 6.1 2 11.2c0 2.9 1.5 5.5 3.8 7.2V22l3.4-1.9c.9.2 1.8.4 2.8.4 5.5 0 10-4.1 10-9.3S17.5 2 12 2zm1 12.4l-2.5-2.7L5.5 14.4l5.5-5.8 2.6 2.7 4.9-2.7-5.5 5.8z"/></svg>;
     default: return null;
   }
 }

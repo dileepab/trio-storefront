@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { useCart } from '@/lib/cartContext';
 import { useI18n } from '@/lib/i18n';
+import { useDialog } from '@/lib/useDialog';
 
 export default function ProfileDashboard({ isOpen, onClose, brandId }) {
   const { currentUser, updateProfile, logout } = useAuth();
@@ -17,6 +18,16 @@ export default function ProfileDashboard({ isOpen, onClose, brandId }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const uid = useId();
+  const titleId = `${uid}-title`;
+  const fid = (n) => `${uid}-${n}`;
+
+  const { panelRef, dialogProps } = useDialog({
+    isOpen: isOpen && !!currentUser,
+    onClose,
+    labelledBy: titleId,
+  });
 
   if (!isOpen || !currentUser) return null;
 
@@ -70,19 +81,25 @@ export default function ProfileDashboard({ isOpen, onClose, brandId }) {
 
   return (
     <div className="auth-overlay" onClick={onClose}>
-      <div className="profile-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="profile-card"
+        ref={panelRef}
+        {...dialogProps}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="auth-header">
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <h2 className="auth-title-text">{formatText('My Account')}</h2>
+            <h2 className="auth-title-text" id={titleId}>{formatText('My Account')}</h2>
             <span className="caption">— {formatText(`Hello, ${currentUser.name}`)}</span>
           </div>
-          <button 
-            onClick={onClose} 
-            aria-label="Close" 
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={formatText('Close')}
             style={{ background: 'transparent', border: 0, fontSize: '28px', color: 'var(--brand-muted)', cursor: 'pointer' }}
           >
-            ×
+            <span aria-hidden="true">×</span>
           </button>
         </div>
 
@@ -95,51 +112,64 @@ export default function ProfileDashboard({ isOpen, onClose, brandId }) {
                 {formatText('Profile Details')}
               </h3>
 
-              {error && <div className="auth-error">{error}</div>}
-              {success && <div className="caption" style={{ background: '#D9EAD3', color: '#274E13', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>{success}</div>}
+              {error && <div className="auth-error" role="alert">{error}</div>}
+              {/* role="status": the save confirmation was previously visible only */}
+              {success && <div className="caption" role="status" style={{ background: '#D9EAD3', color: '#274E13', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>{success}</div>}
 
               <form onSubmit={handleUpdateProfile} className="form-grid" style={{ gap: '12px' }}>
                 <div className="form-group">
-                  <label>{formatText('Full Name')}</label>
-                  <input 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
+                  <label htmlFor={fid('name')}>{formatText('Full Name')}</label>
+                  <input
+                    id={fid('name')}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="form-input"
+                    autoComplete="name"
+                    aria-required="true"
                     disabled={loading}
                   />
                 </div>
                 <div className="form-group">
-                  <label>{formatText('Email Address')}</label>
-                  <input 
-                    type="email" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
+                  <label htmlFor={fid('email')}>{formatText('Email Address')}</label>
+                  <input
+                    id={fid('email')}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="form-input"
+                    autoComplete="email"
+                    aria-required="true"
                     disabled={loading}
                   />
                 </div>
                 <div className="form-group">
-                  <label>{formatText('Phone Number')}</label>
-                  <input 
-                    type="tel" 
-                    value={phone} 
-                    onChange={(e) => setPhone(e.target.value)} 
+                  <label htmlFor={fid('phone')}>{formatText('Phone Number')}</label>
+                  <input
+                    id={fid('phone')}
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="form-input"
+                    autoComplete="tel"
+                    aria-required="true"
                     disabled={loading}
                   />
                 </div>
                 <div className="form-group">
-                  <label>{formatText('Delivery Address')}</label>
-                  <textarea 
-                    value={address} 
-                    onChange={(e) => setAddress(e.target.value)} 
+                  <label htmlFor={fid('address')}>{formatText('Delivery Address')}</label>
+                  <textarea
+                    id={fid('address')}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
                     className="form-input textarea"
                     style={{ minHeight: '60px' }}
+                    autoComplete="street-address"
+                    aria-required="true"
                     disabled={loading}
                   />
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                   <button type="submit" className="btn primary lg flex-1" disabled={loading}>
                     {loading ? formatText('Saving...') : formatText('Save Changes')}

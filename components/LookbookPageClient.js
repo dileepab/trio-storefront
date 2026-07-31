@@ -49,27 +49,38 @@ export default function LookbookPageClient({ brand, products, basePath }) {
           )}
 
           <button
+            type="button"
             className={`hotspot-pulser ${activeHotspot ? 'is-active' : ''}`}
             style={{ top: coords.top, left: coords.left }}
             onClick={() => setActiveHotspot(!activeHotspot)}
-            aria-label="Reveal product details"
+            aria-expanded={activeHotspot}
+            aria-label={`${t('Shop the Look', brand.id)}: ${t(featuredProduct.title, brand.id)}`}
           >
-            <span className="pulser-glow" />
-            <span className="pulser-core" />
+            <span className="pulser-glow" aria-hidden="true" />
+            <span className="pulser-core" aria-hidden="true" />
           </button>
 
           {activeHotspot && (
             <div className="lookbook-pop glass-header" style={{ top: `calc(${coords.top} + 25px)`, left: `calc(${coords.left} - 120px)` }}>
               <div className="lookbook-pop-head">
                 <h3 className="lookbook-pop-title">{t(featuredProduct.title, brand.id)}</h3>
-                <button className="lookbook-pop-close" onClick={() => setActiveHotspot(false)}>×</button>
+                <button
+                  type="button"
+                  className="lookbook-pop-close"
+                  onClick={() => setActiveHotspot(false)}
+                  aria-label={t('Close', brand.id)}
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
               </div>
               <div className="lookbook-pop-price price">LKR {featuredProduct.price}</div>
 
-              <div className="lookbook-pop-sizes">
+              <div className="lookbook-pop-sizes" role="group" aria-label={t('Size', brand.id)}>
                 {sizeOptions.map(sz => (
                   <button
+                    type="button"
                     key={sz}
+                    aria-pressed={selectedSize === sz}
                     className={`lookbook-size-btn ${selectedSize === sz ? 'is-active' : ''}`}
                     onClick={() => setSelectedSize(sz)}
                   >
@@ -80,6 +91,7 @@ export default function LookbookPageClient({ brand, products, basePath }) {
 
               <div className="lookbook-pop-actions">
                 <button
+                  type="button"
                   className="btn primary lg full"
                   onClick={() => {
                     addToCart(featuredProduct, selectedSize);

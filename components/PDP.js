@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
 import { useI18n } from '@/lib/i18n';
@@ -34,6 +34,10 @@ export default function PDP({ brand, product }) {
   const { addToCart, toggleFavorite, isFavorite } = useCart();
   const { t } = useI18n();
   const { setActiveProduct } = usePageContext();
+
+  const uid = useId();
+  const sizeLabelId = `${uid}-size`;
+  const colorLabelId = `${uid}-color`;
 
   const shipping = shippingFor(brand, 0);
 
@@ -83,9 +87,10 @@ export default function PDP({ brand, product }) {
 
           {/* Floating VTO launcher overlay button */}
           <button
+            type="button"
             onClick={() => setVtoOpen(true)}
             className="vto-launch-btn"
-            aria-label="Launch Virtual Try-On"
+            aria-label={t('Virtual Try-On', brand)}
           >
             👤 {t('Virtual Try-On', brand)}
           </button>
@@ -95,6 +100,7 @@ export default function PDP({ brand, product }) {
           <div className="pdp-thumb-strip" role="group" aria-label={t('Product images', brand)}>
             {gallery.map((src, i) => (
               <button
+                type="button"
                 key={src}
                 className={`pdp-thumb ${i === activeImage ? 'is-on' : ''}`}
                 onClick={() => setActiveImage(i)}
@@ -121,10 +127,11 @@ export default function PDP({ brand, product }) {
         </div>
 
         <div className="pdp-section">
-          <div className="pdp-label">{t('Size', brand)}</div>
-          <div className="size-row">
+          <div className="pdp-label" id={sizeLabelId}>{t('Size', brand)}</div>
+          <div className="size-row" role="group" aria-labelledby={sizeLabelId}>
             {availableSizes.map(s => (
               <button
+                type="button"
                 key={s}
                 className={`size-pill ${size === s ? 'is-on' : ''}`}
                 onClick={() => setSize(s)}
@@ -133,21 +140,22 @@ export default function PDP({ brand, product }) {
                 {s}
               </button>
             ))}
-            <button className="link-btn sm">{t('Size chart', brand)}</button>
+            <button type="button" className="link-btn sm">{t('Size chart', brand)}</button>
           </div>
         </div>
 
         {availableColors.length > 0 && (
           <div className="pdp-section">
-            <div className="pdp-label">
+            <div className="pdp-label" id={colorLabelId}>
               {t('Color', brand)}
               {color && <span className="pdp-label-value">{t(color, brand)}</span>}
             </div>
-            <div className="swatch-row">
+            <div className="swatch-row" role="group" aria-labelledby={colorLabelId}>
               {availableColors.map(c => {
                 const hex = colorHex(c);
                 return (
                   <button
+                    type="button"
                     key={c}
                     className={`swatch ${color === c ? 'is-on' : ''} ${isPale(hex) ? 'swatch--pale' : ''}`}
                     onClick={() => setColor(c)}
@@ -155,7 +163,7 @@ export default function PDP({ brand, product }) {
                     aria-pressed={color === c}
                     title={t(c, brand)}
                   >
-                    <span className="swatch-dot" style={{ background: hex }}/>
+                    <span className="swatch-dot" style={{ background: hex }} aria-hidden="true"/>
                   </button>
                 );
               })}
@@ -196,20 +204,23 @@ export default function PDP({ brand, product }) {
 
         <div className="pdp-cta">
           <button
+            type="button"
             className="icon-btn-square"
-            aria-label="Save"
+            aria-label={`${t('Save', brand)} ${t(product.title, brand)}`}
+            aria-pressed={isFavorite(product.slug)}
             onClick={() => toggleFavorite(product.slug)}
           >
             <Icon name="heart" size={18} fill={isFavorite(product.slug) ? 'var(--brand-primary)' : 'none'}/>
           </button>
           <button
+            type="button"
             className="btn primary lg flex-1"
             disabled={isSoldOut}
             onClick={() => addToCart(product, size, color)}
           >
             {isSoldOut ? t('Sold out', brand) : t('Add to cart', brand)}
           </button>
-          <button className="btn messenger lg" aria-label="Chat"><Icon name="msg" size={18}/></button>
+          <button type="button" className="btn messenger lg" aria-label={t('Chat', brand)}><Icon name="msg" size={18}/></button>
         </div>
       </div>
 

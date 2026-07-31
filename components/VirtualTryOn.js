@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
+import { useDialog } from '@/lib/useDialog';
 import Icon from './Icon';
 
 export default function VirtualTryOn({ isOpen, onClose, product, brandId }) {
@@ -9,6 +10,10 @@ export default function VirtualTryOn({ isOpen, onClose, product, brandId }) {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [fitScale, setFitScale] = useState(100);
   const [opacity, setOpacity] = useState(85);
+
+  const uid = useId();
+  const titleId = `${uid}-title`;
+  const { panelRef, dialogProps } = useDialog({ isOpen, onClose, labelledBy: titleId });
 
   if (!isOpen) return null;
 
@@ -32,14 +37,21 @@ export default function VirtualTryOn({ isOpen, onClose, product, brandId }) {
 
   return (
     <div className="vto-overlay" onClick={onClose}>
-      <div className="vto-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="vto-panel"
+        ref={panelRef}
+        {...dialogProps}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Head */}
         <div className="vto-head">
           <div>
-            <h2 className="h3 vto-title">{t('fitting room', brandId)}</h2>
+            <h2 className="h3 vto-title" id={titleId}>{t('fitting room', brandId)}</h2>
             <span className="caption">{t('Virtual Try-On', brandId)} · {t(product.title, brandId)}</span>
           </div>
-          <button className="vto-close" onClick={onClose} aria-label="Close">×</button>
+          <button type="button" className="vto-close" onClick={onClose} aria-label={t('Close', brandId)}>
+            <span aria-hidden="true">×</span>
+          </button>
         </div>
 
         {/* Simulator Area */}
@@ -52,7 +64,7 @@ export default function VirtualTryOn({ isOpen, onClose, product, brandId }) {
             ) : (
               <div className="vto-avatar-svg-container">
                 {/* SVG Silhouette representation based on sizes */}
-                <svg viewBox="0 0 200 400" className={`vto-avatar-silhouette vto-avatar--${selectedAvatar}`}>
+                <svg viewBox="0 0 200 400" className={`vto-avatar-silhouette vto-avatar--${selectedAvatar}`} aria-hidden="true" focusable="false">
                   <path 
                     fill="none" 
                     stroke="var(--brand-border)" 
@@ -98,12 +110,14 @@ export default function VirtualTryOn({ isOpen, onClose, product, brandId }) {
           <div className="vto-controls">
             {/* Avatars */}
             <div className="vto-control-section">
-              <span className="eyebrow vto-section-label">{t('Select body shape', brandId)}</span>
-              <div className="vto-avatar-selector-row">
+              <span className="eyebrow vto-section-label" id={`${uid}-shape`}>{t('Select body shape', brandId)}</span>
+              <div className="vto-avatar-selector-row" role="group" aria-labelledby={`${uid}-shape`}>
                 {['XS', 'S', 'M', 'L', 'XL'].map((sz) => (
-                  <button 
-                    key={sz} 
+                  <button
+                    type="button"
+                    key={sz}
                     className={`vto-avatar-btn ${selectedAvatar === sz ? 'is-active' : ''}`}
+                    aria-pressed={selectedAvatar === sz}
                     onClick={() => {
                       setSelectedAvatar(sz);
                       setUploadedImage(null); // Clear uploaded image if switching to avatar silhouettes
@@ -133,46 +147,50 @@ export default function VirtualTryOn({ isOpen, onClose, product, brandId }) {
             {/* Sliders */}
             <div className="vto-control-section">
               <div className="vto-slider-header">
-                <span className="eyebrow vto-section-label">{t('Fit Preference', brandId)}</span>
-                <span className="caption">{fitScale}%</span>
+                <label className="eyebrow vto-section-label" htmlFor={`${uid}-fit`}>{t('Fit Preference', brandId)}</label>
+                <span className="caption" aria-hidden="true">{fitScale}%</span>
               </div>
               <div className="vto-slider-row">
-                <span className="caption">{t('Fitted', brandId)}</span>
-                <input 
-                  type="range" 
-                  min="80" 
-                  max="130" 
-                  value={fitScale} 
+                <span className="caption" aria-hidden="true">{t('Fitted', brandId)}</span>
+                <input
+                  id={`${uid}-fit`}
+                  type="range"
+                  min="80"
+                  max="130"
+                  value={fitScale}
                   onChange={(e) => setFitScale(parseInt(e.target.value))}
                   className="vto-slider"
+                  aria-valuetext={`${fitScale}%`}
                 />
-                <span className="caption">{t('Oversized', brandId)}</span>
+                <span className="caption" aria-hidden="true">{t('Oversized', brandId)}</span>
               </div>
             </div>
 
             <div className="vto-control-section">
               <div className="vto-slider-header">
-                <span className="eyebrow vto-section-label">{t('Drape Opacity', brandId)}</span>
-                <span className="caption">{opacity}%</span>
+                <label className="eyebrow vto-section-label" htmlFor={`${uid}-opacity`}>{t('Drape Opacity', brandId)}</label>
+                <span className="caption" aria-hidden="true">{opacity}%</span>
               </div>
               <div className="vto-slider-row">
-                <span className="caption">20%</span>
-                <input 
-                  type="range" 
-                  min="20" 
-                  max="100" 
-                  value={opacity} 
+                <span className="caption" aria-hidden="true">20%</span>
+                <input
+                  id={`${uid}-opacity`}
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={opacity}
                   onChange={(e) => setOpacity(parseInt(e.target.value))}
                   className="vto-slider"
+                  aria-valuetext={`${opacity}%`}
                 />
-                <span className="caption">100%</span>
+                <span className="caption" aria-hidden="true">100%</span>
               </div>
             </div>
 
-            {/* Feedback Alert */}
+            {/* Feedback Alert — the fit note changes as the sliders move */}
             <div className="vto-feedback-alert">
-              <span className="vto-feedback-dot" />
-              <p className="caption vto-feedback-text">{getFitWarning()}</p>
+              <span className="vto-feedback-dot" aria-hidden="true" />
+              <p className="caption vto-feedback-text" role="status">{getFitWarning()}</p>
             </div>
           </div>
         </div>
