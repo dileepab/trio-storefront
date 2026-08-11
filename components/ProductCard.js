@@ -29,7 +29,7 @@ export default function ProductCard({
   const soldOut = tracked && stockQty <= 0;
   const lowStock = tracked && stockQty > 0 && stockQty <= LOW_STOCK_AT;
 
-  const quickSizes = (Array.isArray(sizes) && sizes.length > 0 ? sizes : ['S', 'M', 'L']).slice(0, 3);
+  const displaySizes = Array.isArray(sizes) && sizes.length > 0 ? sizes : ['S', 'M', 'L'];
 
   return (
     /* The card is a container, not a link. The title holds the only anchor and
@@ -70,7 +70,7 @@ export default function ProductCard({
           <div className="p-quick-add">
             <div className="p-quick-add-title" aria-hidden="true">{formatText('Quick Add')}</div>
             <div className="p-quick-add-sizes">
-              {quickSizes.map(size => (
+              {displaySizes.map(size => (
                 <button
                   type="button"
                   key={size}
@@ -97,6 +97,21 @@ export default function ProductCard({
             {formatText(title)}
           </Link>
         </Heading>
+
+        {/* Available Sizes Indicator */}
+        {displaySizes.length > 0 && (
+          <div className="p-sizes-badge">
+            <span className="p-sizes-label">{formatText('Sizes')}: </span>
+            <span className="p-sizes-list">
+              {displaySizes.map((s, idx) => (
+                <span key={s} className="p-size-tag">
+                  {s}{idx < displaySizes.length - 1 ? ' · ' : ''}
+                </span>
+              ))}
+            </span>
+          </div>
+        )}
+
         <div className="p-meta">
           <div className="price">
             {was && <span className="price-strike">LKR {was}</span>}

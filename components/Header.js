@@ -10,6 +10,14 @@ import { storefrontHref } from '@/lib/storefrontRouting';
 import AuthModal from './AuthModal';
 import ProfileDashboard from './ProfileDashboard';
 
+function getUserInitials(name) {
+  if (!name || typeof name !== 'string') return 'U';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'U';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export default function Header({ brand, basePath }) {
   const { cartCount, openCart, justAddedId } = useCart();
   const { currentUser } = useAuth();
@@ -89,18 +97,20 @@ export default function Header({ brand, basePath }) {
 
         <button className="icon-btn" aria-label="Search"><Icon name="search"/></button>
 
-        {/* Account Button with dynamic username label */}
+        {/* Account Button with user initials avatar badge */}
         <button
           className="icon-btn sf-account-btn"
-          aria-label="Account"
+          aria-label={currentUser ? `Account: ${currentUser.name}` : 'Account'}
+          title={currentUser ? currentUser.name : 'Account'}
           onClick={handleAccountClick}
         >
-          {currentUser && (
-            <span className="caption sf-account-name sf-desktop-only">
-              {formatText(currentUser.name)}
-            </span>
+          {currentUser ? (
+            <div className="sf-user-avatar">
+              <span>{getUserInitials(currentUser.name)}</span>
+            </div>
+          ) : (
+            <Icon name="user"/>
           )}
-          <Icon name="user"/>
         </button>
 
         {/* The count lives in the label, not just the pill: aria-label replaces
@@ -168,7 +178,7 @@ export default function Header({ brand, basePath }) {
                 >
                   <option value="en">English (EN)</option>
                   <option value="si">සිංහල (Sinhala)</option>
-                  <option value="ta">தமிழ් (Tamil)</option>
+                  <option value="ta">தமிழ் (Tamil)</option>
                 </select>
               </div>
 
@@ -207,8 +217,19 @@ export default function Header({ brand, basePath }) {
                     handleAccountClick();
                   }}
                 >
-                  <Icon name="user" size={16}/>
-                  {currentUser ? formatText(currentUser.name) : formatText('My Account')}
+                  {currentUser ? (
+                    <>
+                      <div className="sf-user-avatar sm">
+                        <span>{getUserInitials(currentUser.name)}</span>
+                      </div>
+                      <span>{formatText(currentUser.name)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="user" size={16}/>
+                      {formatText('My Account')}
+                    </>
+                  )}
                 </button>
               </div>
             </div>
