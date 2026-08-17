@@ -7,9 +7,7 @@ import { usePageContext } from '@/lib/pageContext';
 import { colorHex, isPale } from '@/lib/colors';
 import { shippingFor } from '@/lib/shipping';
 import { sortSizes } from '@/lib/products';
-import VirtualTryOn from './VirtualTryOn';
-
-const LOW_STOCK_AT = 5;
+import SizeChartModal from './SizeChartModal';
 
 export default function PDP({ brand, product }) {
   const availableSizes = sortSizes(
@@ -19,21 +17,24 @@ export default function PDP({ brand, product }) {
   );
   const availableColors = Array.isArray(product.colors) ? product.colors : [];
   const defaultSize = availableSizes.includes('M') ? 'M' : availableSizes[0];
-  const isSoldOut = typeof product.stockQty === 'number' && product.stockQty <= 0;
-  const isLowStock = typeof product.stockQty === 'number'
-    && product.stockQty > 0
-    && product.stockQty <= LOW_STOCK_AT;
 
-  // Gallery sources: an `images` array when the catalogue supplies one,
-  // otherwise the single `image`, otherwise nothing (gradient placeholder).
+  // Gallery sources: the `images` array the catalogue sends, otherwise the
+  // single `image`, otherwise nothing (gradient placeholder).
   const gallery = Array.isArray(product.images) && product.images.length > 0
     ? product.images
     : (product.image ? [product.image] : []);
 
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+
+  // Colour names are formatted for display on the product but stored raw on the
+  // variant, so they are compared loosely rather than by identity.
+  const sameValue = (a, b) =>
+    String(a ?? '').trim().toLowerCase() === String(b ?? '').trim().toLowerCase();
+
   const [size, setSize] = useState(defaultSize);
   const [color, setColor] = useState(availableColors[0] || null);
   const [activeImage, setActiveImage] = useState(0);
-  const [vtoOpen, setVtoOpen] = useState(false);
+  const [chartOpen, setChartOpen] = useState(false);
   const { addToCart, toggleFavorite, isFavorite } = useCart();
   const { t } = useI18n();
   const { setActiveProduct } = usePageContext();
@@ -41,6 +42,26 @@ export default function PDP({ brand, product }) {
   const uid = useId();
   const sizeLabelId = `${uid}-size`;
   const colorLabelId = `${uid}-color`;
+
+  // Availability follows the variant the shopper has actually chosen. Reporting
+  // the product total told someone a sold-out size was "In stock" simply
+  // because another size still had units.
+  const matchingVariants = variants.filter((variant) => {
+    if (size && !sameValue(variant.size, size)) return false;
+    if (color && variant.color && !sameValue(variant.color, color)) return false;
+    return true;
+  });
+
+  // Keyed off whether the product has variants at all, not off whether any
+  // matched: a size and colour with no variant behind it is a combination we
+  // cannot ship, and falling back to the product total would call it in stock.
+  const selectedQty = variants.length > 0
+    ? matchingVariants.reduce((sum, variant) => sum + (Number(variant.availableQty) || 0), 0)
+    : (typeof product.stockQty === 'number' ? product.stockQty : null);
+
+  const isTracked = typeof selectedQty === 'number';
+  const isSoldOut = isTracked && selectedQty <= 0;
+  const stockLabel = isSoldOut ? t('Sold out', brand) : t('In stock', brand);
 
   const shipping = shippingFor(brand, 0);
 
@@ -87,16 +108,6 @@ export default function PDP({ brand, product }) {
           {isSoldOut && (
             <span className="pdp-badge pdp-badge--out">{t('Sold out', brand)}</span>
           )}
-
-          {/* Floating VTO launcher overlay button */}
-          <button
-            type="button"
-            onClick={() => setVtoOpen(true)}
-            className="vto-launch-btn"
-            aria-label={t('Virtual Try-On', brand)}
-          >
-            👤 {t('Virtual Try-On', brand)}
-          </button>
         </div>
 
         {gallery.length > 1 && (
@@ -125,8 +136,8 @@ export default function PDP({ brand, product }) {
           {product.was && <span className="price-strike">LKR {product.was}</span>}
         </div>
 
-        <div className={`pdp-stock${isSoldOut ? ' is-out' : ''}${isLowStock ? ' is-low' : ''}`}>
-          <span className="dot"/> {t(product.stock, brand)}
+        <div className={`pdp-stock${isSoldOut ? ' is-out' : ''}`} role="status">
+          <span className="dot"/> {stockLabel}
         </div>
 
         <div className="pdp-section">
@@ -143,7 +154,13 @@ export default function PDP({ brand, product }) {
                 {s}
               </button>
             ))}
-            <button type="button" className="link-btn sm">{t('Size chart', brand)}</button>
+            <button
+              type="button"
+              className="link-btn sm"
+              onClick={() => setChartOpen(true)}
+            >
+              {t('Size chart', brand)}
+            </button>
           </div>
         </div>
 
@@ -227,12 +244,12 @@ export default function PDP({ brand, product }) {
         </div>
       </div>
 
-      {/* VTO Overlay Panel */}
-      <VirtualTryOn
-        isOpen={vtoOpen}
-        onClose={() => setVtoOpen(false)}
-        product={product}
-        brandId={brand}
+      <SizeChartModal
+        isOpen={chartOpen}
+        onClose={() => setChartOpen(false)}
+        brand={brand}
+        sizeChart={product.sizeChart}
+        productTitle={t(product.title, brand)}
       />
     </div>
   );
