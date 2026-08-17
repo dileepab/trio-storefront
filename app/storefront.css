@@ -2927,299 +2927,6 @@ button {
   }
 }
 
-/* ===== Virtual Try-On panel ===== */
-.vto-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: var(--z-modal);
-  display: flex;
-  justify-content: flex-start;
-}
-
-.vto-panel {
-  width: 440px;
-  max-width: 100%;
-  height: 100%;
-  background: var(--brand-surface);
-  box-shadow: var(--shadow-lift);
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--brand-border-subtle);
-  animation: vtoSlideIn var(--dur-slow) var(--ease-out);
-}
-
-@keyframes vtoSlideIn {
-  from {
-    transform: translateX(-100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-.vto-head {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--brand-border-subtle);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.vto-title {
-  margin: 0 0 2px;
-  font-family: var(--font-display);
-}
-
-.vto-close {
-  background: transparent;
-  border: 0;
-  font-size: 28px;
-  font-weight: 300;
-  cursor: pointer;
-  color: var(--brand-muted);
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-
-.vto-close:hover {
-  transform: scale(1.15) rotate(90deg);
-}
-
-.vto-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* Canvas Area */
-.vto-canvas-container {
-  position: relative;
-  aspect-ratio: 4/5;
-  width: 100%;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--brand-surface-2);
-  border: 1px solid var(--brand-border-subtle);
-}
-
-.vto-avatar-svg-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.vto-avatar-silhouette {
-  height: 85%;
-  color: var(--brand-border);
-  transition: transform 0.3s var(--ease-out);
-}
-
-.vto-avatar--XS {
-  transform: scale(0.85);
-}
-
-.vto-avatar--S {
-  transform: scale(0.92);
-}
-
-.vto-avatar--M {
-  transform: scale(1.0);
-}
-
-.vto-avatar--L {
-  transform: scale(1.08);
-}
-
-.vto-avatar--XL {
-  transform: scale(1.15);
-}
-
-.vto-base-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Overlaid garment drape overlay */
-.vto-garment-wrapper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 70%;
-  height: 70%;
-  pointer-events: none;
-  transition: transform 0.15s var(--ease-out), opacity 0.15s;
-  z-index: 2;
-}
-
-.vto-garment-wrapper.fallback-gradient {
-  border-radius: var(--radius);
-  mix-blend-mode: soft-light;
-}
-
-.vto-garment-overlay {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* Controls */
-.vto-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.vto-control-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.vto-section-label {
-  font-size: 10px;
-}
-
-.vto-avatar-selector-row {
-  display: flex;
-  gap: 8px;
-}
-
-.vto-avatar-btn {
-  flex: 1;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--brand-border-strong);
-  background: var(--brand-surface);
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--brand-text);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.vto-avatar-btn.is-active {
-  background: var(--brand-primary);
-  color: var(--brand-text-on-primary);
-  border-color: var(--brand-primary);
-}
-
-.vto-upload-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 48px;
-  border: 1px dashed var(--brand-border-strong);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-  color: var(--brand-muted);
-}
-
-.vto-upload-box:hover {
-  background: var(--brand-surface-2);
-  border-color: var(--brand-primary);
-  color: var(--brand-primary);
-}
-
-.vto-slider-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.vto-slider-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.vto-slider {
-  flex: 1;
-  accent-color: var(--brand-primary);
-  height: 4px;
-  border-radius: 999px;
-  cursor: pointer;
-  background: var(--brand-surface-2);
-  border: 0;
-  appearance: none;
-}
-
-.vto-feedback-alert {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--brand-surface-2);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-}
-
-.vto-feedback-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #128A50;
-  flex-shrink: 0;
-}
-
-.vto-feedback-text {
-  margin: 0;
-  color: var(--brand-text);
-  line-height: 1.4;
-}
-
-/* VTO Floating Launch Trigger inside PDP image wrapper */
-.vto-launch-btn {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--brand-border-subtle);
-  border-radius: var(--radius);
-  padding: 8px 14px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--brand-text);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: var(--shadow-card);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast);
-  cursor: pointer;
-  z-index: 5;
-}
-
-.vto-launch-btn:hover {
-  transform: scale(1.05) translateY(-1px);
-  background: #fff;
-  box-shadow: var(--shadow-lift);
-}
-
-@media (max-width: 500px) {
-  .vto-panel {
-    width: 100vw;
-  }
-}
-
 /* ===== Auth & Profile Modals ===== */
 .auth-overlay {
   position: fixed;
@@ -3633,12 +3340,10 @@ button {
   .chat-close,
   .cart-drawer-close,
   .mobile-drawer-close,
-  .vto-close,
-  .vto-avatar-btn,
+  .sizechart-close,
   .lookbook-size-btn,
   .qty button,
-  .chip,
-  .vto-launch-btn {
+  .chip {
     min-width: var(--tap-min);
     min-height: var(--tap-min);
   }
@@ -3650,4 +3355,113 @@ button {
     display: inline-flex;
     align-items: center;
   }
+}
+
+/* ===== Product card: second angle on hover =====
+   The card already transitions opacity on .p-card-img, so the swap only needs
+   the stacking order and the trigger. Keyboard users reach the product through
+   the title link, so :focus-within covers them too. */
+.p-card-img--hover {
+  opacity: 0;
+  z-index: 1;
+}
+
+.p-card:hover .p-card-img--hover,
+.p-card:focus-within .p-card-img--hover {
+  opacity: 1;
+}
+
+/* A sold-out card is desaturated and does not zoom, so it should not swap
+   either — the movement reads as availability. */
+.p-card.is-sold-out .p-card-img--hover {
+  display: none;
+}
+
+/* Touch has no hover: the second image would either never show or stick after
+   a tap. The product page's thumbnail strip is the route to it there. */
+@media (hover: none) {
+  .p-card-img--hover {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p-card-img--hover {
+    transition: none;
+  }
+}
+
+/* ===== Size chart dialog ===== */
+.sizechart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.sizechart-panel {
+  background: var(--brand-surface-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lift);
+  width: min(560px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sizechart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.sizechart-title {
+  margin: 0;
+}
+
+.sizechart-close {
+  border: 0;
+  background: transparent;
+  color: var(--brand-fg-2);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: 0 var(--sp-2);
+}
+
+.sizechart-close:hover {
+  color: var(--brand-fg-1);
+}
+
+.sizechart-body {
+  padding: var(--sp-4);
+  overflow: auto;
+}
+
+.sizechart-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sizechart-empty {
+  margin: 0;
+  color: var(--brand-fg-2);
+}
+
+.sizechart-note {
+  margin: 0;
+  padding: 0 var(--sp-4) var(--sp-4);
+  color: var(--brand-fg-2);
 }

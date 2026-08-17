@@ -10,7 +10,7 @@ const LOW_STOCK_AT = 5;
 
 export default function ProductCard({
   brand, basePath, slug, title, price, was, tag,
-  swatchA, swatchB, eyebrow, rating, image, sizes, stockQty,
+  swatchA, swatchB, eyebrow, rating, image, images, sizes, stockQty,
   // The grid's place in the heading outline differs by page: on the PLP the
   // cards sit directly under the page <h1>, on the home page they sit under a
   // rail's <h2>. Skipping a level is a structural error either way.
@@ -32,6 +32,13 @@ export default function ProductCard({
 
   const displaySizes = sortSizes(Array.isArray(sizes) && sizes.length > 0 ? sizes : ['S', 'M', 'L']);
 
+  // The second photograph is usually the back or a detail shot. Showing it on
+  // hover lets a shopper see more without opening the product, and costs
+  // nothing when the catalogue only has one image.
+  const gallery = Array.isArray(images) && images.length > 0 ? images : (image ? [image] : []);
+  const frontImage = gallery[0] || image || null;
+  const hoverImage = gallery.length > 1 ? gallery[1] : null;
+
   return (
     /* The card is a container, not a link. The title holds the only anchor and
        stretches an invisible ::after over the whole card for the click target,
@@ -41,11 +48,17 @@ export default function ProductCard({
     <article className={`p-card p-card--${brand}${soldOut ? ' is-sold-out' : ''}`}>
       <div
         className="p-img"
-        style={{ background: image ? 'var(--brand-surface-2)' : `linear-gradient(160deg, ${swatchA} 0%, ${swatchB} 100%)` }}
+        style={{ background: frontImage ? 'var(--brand-surface-2)' : `linear-gradient(160deg, ${swatchA} 0%, ${swatchB} 100%)` }}
       >
         {/* alt="" — the title link directly below names the product, so a
             description here would just be announced twice. */}
-        {image && <img src={image} alt="" className="p-card-img"/>}
+        {frontImage && <img src={frontImage} alt="" className="p-card-img"/>}
+
+        {/* Second angle, revealed on hover. aria-hidden because it carries no
+            information the front image and the title do not already give. */}
+        {hoverImage && (
+          <img src={hoverImage} alt="" aria-hidden="true" className="p-card-img p-card-img--hover"/>
+        )}
 
         {/* Real element rather than a filter on .p-img — a parent filter would
             drag the status badge down with it. */}
