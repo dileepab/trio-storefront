@@ -511,13 +511,11 @@ button {
 .hero-backdrop-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--brand-bg) 96%, transparent) 0%,
-    color-mix(in srgb, var(--brand-bg) 88%, transparent) 42%,
-    color-mix(in srgb, var(--brand-bg) 35%, transparent) 75%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--brand-bg) 96%, transparent) 0%,
+      color-mix(in srgb, var(--brand-bg) 88%, transparent) 42%,
+      color-mix(in srgb, var(--brand-bg) 35%, transparent) 75%,
+      transparent 100%);
   pointer-events: none;
 }
 
@@ -537,14 +535,12 @@ button {
   }
 
   .hero-backdrop-scrim {
-    background: linear-gradient(
-      90deg,
-      var(--brand-bg) 0%,
-      color-mix(in srgb, var(--brand-bg) 96%, transparent) 32%,
-      color-mix(in srgb, var(--brand-bg) 75%, transparent) 50%,
-      color-mix(in srgb, var(--brand-bg) 18%, transparent) 70%,
-      transparent 88%
-    );
+    background: linear-gradient(90deg,
+        var(--brand-bg) 0%,
+        color-mix(in srgb, var(--brand-bg) 96%, transparent) 32%,
+        color-mix(in srgb, var(--brand-bg) 75%, transparent) 50%,
+        color-mix(in srgb, var(--brand-bg) 18%, transparent) 70%,
+        transparent 88%);
   }
 }
 
@@ -554,14 +550,12 @@ button {
   }
 
   .hero-backdrop-scrim {
-    background: linear-gradient(
-      90deg,
-      var(--brand-bg) 0%,
-      color-mix(in srgb, var(--brand-bg) 97%, transparent) 34%,
-      color-mix(in srgb, var(--brand-bg) 70%, transparent) 52%,
-      color-mix(in srgb, var(--brand-bg) 12%, transparent) 72%,
-      transparent 90%
-    );
+    background: linear-gradient(90deg,
+        var(--brand-bg) 0%,
+        color-mix(in srgb, var(--brand-bg) 97%, transparent) 34%,
+        color-mix(in srgb, var(--brand-bg) 70%, transparent) 52%,
+        color-mix(in srgb, var(--brand-bg) 12%, transparent) 72%,
+        transparent 90%);
   }
 }
 
@@ -664,7 +658,7 @@ button {
   margin: 0 auto;
 }
 
-.trust-item + .trust-item {
+.trust-item+.trust-item {
   border-left: 1px solid var(--brand-border-subtle);
 }
 
@@ -1396,8 +1390,14 @@ button {
   color: var(--brand-surface);
 }
 
-[data-brand="cleopatra"] .pdp-badge { border-radius: 0; }
-[data-brand="modabella"] .pdp-badge { border-radius: var(--radius-sm); text-transform: lowercase; }
+[data-brand="cleopatra"] .pdp-badge {
+  border-radius: 0;
+}
+
+[data-brand="modabella"] .pdp-badge {
+  border-radius: var(--radius-sm);
+  text-transform: lowercase;
+}
 
 /* Thumbnail strip — scrolls horizontally on narrow screens */
 .pdp-thumb-strip {
@@ -3623,7 +3623,9 @@ button {
    Keyed on width as well as pointer type: `pointer: coarse` alone misses
    narrow windows on hybrid devices and is not reported by desktop browsers
    emulating a phone viewport. */
-@media (pointer: coarse), (max-width: 700px) {
+@media (pointer: coarse),
+(max-width: 700px) {
+
   .icon-btn,
   .p-fav,
   .p-quick-add-btn,
