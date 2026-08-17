@@ -6,14 +6,17 @@ import { useI18n } from '@/lib/i18n';
 import { usePageContext } from '@/lib/pageContext';
 import { colorHex, isPale } from '@/lib/colors';
 import { shippingFor } from '@/lib/shipping';
+import { sortSizes } from '@/lib/products';
 import VirtualTryOn from './VirtualTryOn';
 
 const LOW_STOCK_AT = 5;
 
 export default function PDP({ brand, product }) {
-  const availableSizes = Array.isArray(product.sizes) && product.sizes.length > 0
-    ? product.sizes
-    : ['S', 'M', 'L'];
+  const availableSizes = sortSizes(
+    Array.isArray(product.sizes) && product.sizes.length > 0
+      ? product.sizes
+      : ['S', 'M', 'L']
+  );
   const availableColors = Array.isArray(product.colors) ? product.colors : [];
   const defaultSize = availableSizes.includes('M') ? 'M' : availableSizes[0];
   const isSoldOut = typeof product.stockQty === 'number' && product.stockQty <= 0;

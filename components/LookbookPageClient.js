@@ -4,13 +4,14 @@ import { useCart } from '@/lib/cartContext';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
 import { storefrontHref } from '@/lib/storefrontRouting';
+import { sortSizes } from '@/lib/products';
 
 export default function LookbookPageClient({ brand, products, basePath }) {
   const { t } = useI18n();
   const { addToCart } = useCart();
   const [activeHotspot, setActiveHotspot] = useState(false);
   const featuredProduct = products.find(p => p.image) || products[0];
-  const sizeOptions = featuredProduct?.sizes?.length ? featuredProduct.sizes : ['S', 'M', 'L'];
+  const sizeOptions = sortSizes(featuredProduct?.sizes?.length ? featuredProduct.sizes : ['S', 'M', 'L']);
   const [selectedSize, setSelectedSize] = useState(sizeOptions.includes('M') ? 'M' : sizeOptions[0]);
 
   if (!featuredProduct) {

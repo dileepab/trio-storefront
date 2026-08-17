@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Icon from './Icon';
 import { useCart } from '@/lib/cartContext';
 import { storefrontHref } from '@/lib/storefrontRouting';
+import { sortSizes } from '@/lib/products';
 
 // Below this many units we nudge the shopper rather than staying silent
 const LOW_STOCK_AT = 5;
@@ -29,7 +30,7 @@ export default function ProductCard({
   const soldOut = tracked && stockQty <= 0;
   const lowStock = tracked && stockQty > 0 && stockQty <= LOW_STOCK_AT;
 
-  const displaySizes = Array.isArray(sizes) && sizes.length > 0 ? sizes : ['S', 'M', 'L'];
+  const displaySizes = sortSizes(Array.isArray(sizes) && sizes.length > 0 ? sizes : ['S', 'M', 'L']);
 
   return (
     /* The card is a container, not a link. The title holds the only anchor and

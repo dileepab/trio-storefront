@@ -4,6 +4,7 @@ import ProductCard from '@/components/ProductCard';
 import PLPFilters from '@/components/PLPFilters';
 import { useI18n } from '@/lib/i18n';
 import { useAnnouncer } from '@/lib/announcer';
+import { sortSizes } from '@/lib/products';
 
 function numericPrice(item) {
   if (typeof item.priceNumber === 'number') {
@@ -46,12 +47,7 @@ export default function ShopPageClient({ brand, products, basePath }) {
 
   const availableSizes = useMemo(() => {
     const values = products.flatMap(item => Array.isArray(item.sizes) ? item.sizes : []);
-    return [...new Set(values)].sort((a, b) => {
-      const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-      const aIndex = order.indexOf(a);
-      const bIndex = order.indexOf(b);
-      return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex) || a.localeCompare(b);
-    });
+    return sortSizes([...new Set(values)]);
   }, [products]);
 
   const availableColors = useMemo(() => {
