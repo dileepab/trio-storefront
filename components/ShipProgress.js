@@ -6,8 +6,8 @@ import { shippingFor } from '@/lib/shipping';
  * Progress toward the brand's free-courier threshold.
  * Renders nothing when the brand has no threshold configured.
  */
-export default function ShipProgress({ brandId, subtotal }) {
-  const { threshold, remaining, qualified, progress } = shippingFor(brandId, subtotal);
+export default function ShipProgress({ brandId, subtotal, deliveryRule = null }) {
+  const { threshold, remaining, qualified, progress } = shippingFor(brandId, subtotal, deliveryRule);
 
   if (threshold === null) return null;
 

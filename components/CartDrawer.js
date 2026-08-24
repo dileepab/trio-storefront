@@ -10,7 +10,7 @@ import ShipProgress from './ShipProgress';
 import { shippingFor } from '@/lib/shipping';
 
 export default function CartDrawer({ brand }) {
-  const { cartItems, isOpen, closeCart, updateQty, removeFromCart, placeOrder } = useCart();
+  const { cartItems, isOpen, closeCart, updateQty, removeFromCart, placeOrder, deliveryRule } = useCart();
   const { currentUser } = useAuth();
 
   const [payMethod, setPayMethod] = useState('COD');
@@ -51,7 +51,7 @@ export default function CartDrawer({ brand }) {
 
   const brandSlug = brand.id;
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const shipping = shippingFor(brandSlug, subtotal);
+  const shipping = shippingFor(brandSlug, subtotal, deliveryRule);
   const delivery = shipping.fee;
   const total = subtotal + delivery;
 
@@ -240,7 +240,7 @@ export default function CartDrawer({ brand }) {
         {/* Bottom Checkout Sticky Summary */}
         {!orderSuccessNum && cartItems.length > 0 && (
           <div className="cart-drawer-summary">
-            <ShipProgress brandId={brandSlug} subtotal={subtotal}/>
+            <ShipProgress brandId={brandSlug} subtotal={subtotal} deliveryRule={deliveryRule}/>
 
             <div className="row">
               <span>{formatText('Subtotal')}</span>

@@ -8,11 +8,11 @@ import PayToggle from './PayToggle';
 import ShipProgress from './ShipProgress';
 
 export default function Cart({ brand, basePath }) {
-  const { cartItems, updateQty, removeFromCart } = useCart();
+  const { cartItems, updateQty, removeFromCart, deliveryRule } = useCart();
   const [payMethod, setPayMethod] = useState('COD');
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const shipping = shippingFor(brand, subtotal);
+  const shipping = shippingFor(brand, subtotal, deliveryRule);
   const delivery = shipping.fee;
   const total = subtotal + delivery;
 

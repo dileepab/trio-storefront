@@ -11,6 +11,7 @@ import { I18nProvider } from '@/lib/i18n';
 import { PageContextProvider } from '@/lib/pageContext';
 import { AnnouncerProvider } from '@/lib/announcer';
 import { getRequestBasePath } from '@/lib/requestRouting';
+import { getDeliveryRule } from '@/lib/products';
 
 export async function generateStaticParams() {
   return BRAND_SLUGS.map(brand => ({ brand }));
@@ -21,14 +22,15 @@ export async function generateMetadata({ params }) {
   return { title: b ? `${b.name} · ${b.domain}` : 'Not found' };
 }
 
-export default function BrandLayout({ children, params }) {
+export default async function BrandLayout({ children, params }) {
   const brand = getBrand(params.brand);
   if (!brand) notFound();
   const basePath = getRequestBasePath(brand.id);
+  const deliveryRule = await getDeliveryRule(brand.id);
   return (
     <I18nProvider>
       <AuthProvider brandId={brand.id}>
-        <CartProvider brandId={brand.id}>
+        <CartProvider brandId={brand.id} deliveryRule={deliveryRule}>
           <PageContextProvider>
             <AnnouncerProvider>
               <MetaPixel />

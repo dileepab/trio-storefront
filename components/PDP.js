@@ -36,7 +36,7 @@ export default function PDP({ brand, product }) {
   const [color, setColor] = useState(availableColors[0] || null);
   const [activeImage, setActiveImage] = useState(0);
   const [chartOpen, setChartOpen] = useState(false);
-  const { addToCart, toggleFavorite, isFavorite } = useCart();
+  const { addToCart, toggleFavorite, isFavorite, deliveryRule } = useCart();
   const { t } = useI18n();
   const { setActiveProduct } = usePageContext();
 
@@ -74,7 +74,7 @@ export default function PDP({ brand, product }) {
   const isSoldOut = isTracked && selectedQty <= 0;
   const stockLabel = isSoldOut ? t('Sold out', brand) : t('In stock', brand);
 
-  const shipping = shippingFor(brand, 0);
+  const shipping = shippingFor(brand, 0, deliveryRule);
 
   // Publish the product the shopper is viewing so the ChatFAB can resolve
   // references like "this item". Clears when leaving the page.
