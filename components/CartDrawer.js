@@ -1,5 +1,5 @@
 'use client';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useCart } from '@/lib/cartContext';
 import { useAuth } from '@/lib/authContext';
 import { useDialog } from '@/lib/useDialog';
@@ -16,6 +16,28 @@ export default function CartDrawer({ brand }) {
   const [payMethod, setPayMethod] = useState('COD');
   const [orderSuccessNum, setOrderSuccessNum] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [isPlacing, setIsPlacing] = useState(false);
+  const [orderError, setOrderError] = useState(null);
+  // Where the order is actually going. Requiring an account first loses the
+  // sale, and the account we have holds one free-text address the courier
+  // cannot route on.
+  const [details, setDetails] = useState({
+    name: '',
+    phone: '',
+    streetAddress: '',
+    city: '',
+    district: '',
+  });
+
+  useEffect(() => {
+    if (!currentUser) return;
+    setDetails((prev) => ({
+      ...prev,
+      name: prev.name || currentUser.name || '',
+      phone: prev.phone || currentUser.phone || '',
+      streetAddress: prev.streetAddress || currentUser.address || '',
+    }));
+  }, [currentUser]);
 
   const uid = useId();
   const titleId = `${uid}-title`;
@@ -40,23 +62,31 @@ export default function CartDrawer({ brand }) {
     return brandSlug === 'modabella' ? text.toLowerCase() : text;
   };
 
-  const handleCheckoutClick = () => {
-    if (!currentUser) {
-      setAuthOpen(true);
+  const setField = (field) => (event) =>
+    setDetails((prev) => ({ ...prev, [field]: event.target.value }));
+
+  const canPlace =
+    details.name.trim().length > 1 &&
+    details.phone.replace(/\D/g, '').length >= 9 &&
+    details.streetAddress.trim().length > 3 &&
+    details.city.trim().length > 1;
+
+  const handleCheckoutClick = async () => {
+    if (isPlacing) return;
+
+    setOrderError(null);
+    setIsPlacing(true);
+
+    const result = await placeOrder(brandSlug, details);
+
+    setIsPlacing(false);
+
+    if (result.ok) {
+      setOrderSuccessNum(`ORD-${result.orderId}`);
       return;
     }
 
-    // Place order under active logged in user
-    const order = placeOrder(
-      currentUser.id,
-      brandSlug,
-      currentUser.address,
-      payMethod
-    );
-
-    if (order) {
-      setOrderSuccessNum(order.orderNumber);
-    }
+    setOrderError(result.error);
   };
 
   return (
@@ -231,11 +261,87 @@ export default function CartDrawer({ brand }) {
               <PayToggle brandId={brandSlug} value={payMethod} onChange={setPayMethod}/>
             </div>
 
+            <div className="cart-drawer-details">
+              <label>
+                <span className="visually-hidden">{formatText('Full name')}</span>
+                <input
+                  className="form-input"
+                  type="text"
+                  autoComplete="name"
+                  placeholder={formatText('Full name')}
+                  value={details.name}
+                  onChange={setField('name')}
+                  disabled={isPlacing}
+                  required
+                />
+              </label>
+              <label>
+                <span className="visually-hidden">{formatText('Mobile number')}</span>
+                <input
+                  className="form-input"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder={formatText('Mobile number (07XXXXXXXX)')}
+                  value={details.phone}
+                  onChange={setField('phone')}
+                  disabled={isPlacing}
+                  required
+                />
+              </label>
+              <label>
+                <span className="visually-hidden">{formatText('Address')}</span>
+                <input
+                  className="form-input"
+                  type="text"
+                  autoComplete="street-address"
+                  placeholder={formatText('House number and street')}
+                  value={details.streetAddress}
+                  onChange={setField('streetAddress')}
+                  disabled={isPlacing}
+                  required
+                />
+              </label>
+              {/* City and district are asked separately because the courier
+                  matches on them, and a district typed into the city box is
+                  what makes a waybill fail after the sale is made. */}
+              <label>
+                <span className="visually-hidden">{formatText('City')}</span>
+                <input
+                  className="form-input"
+                  type="text"
+                  autoComplete="address-level2"
+                  placeholder={formatText('City / town')}
+                  value={details.city}
+                  onChange={setField('city')}
+                  disabled={isPlacing}
+                  required
+                />
+              </label>
+              <label>
+                <span className="visually-hidden">{formatText('District')}</span>
+                <input
+                  className="form-input"
+                  type="text"
+                  autoComplete="address-level1"
+                  placeholder={formatText('District')}
+                  value={details.district}
+                  onChange={setField('district')}
+                  disabled={isPlacing}
+                />
+              </label>
+            </div>
+
+            {orderError && (
+              <p className="cart-drawer-error" role="alert">{orderError}</p>
+            )}
+
             <button
               className="btn primary lg full cart-drawer-checkout"
               onClick={handleCheckoutClick}
+              disabled={!canPlace || isPlacing}
             >
-              {formatText('Place order')}
+              {isPlacing ? formatText('Placing order...') : formatText('Place order')}
             </button>
           </div>
         )}
