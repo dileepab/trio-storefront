@@ -7,6 +7,7 @@ import { usePageContext } from '@/lib/pageContext';
 import { colorHex, isPale } from '@/lib/colors';
 import { shippingFor } from '@/lib/shipping';
 import { sortSizes } from '@/lib/products';
+import { trackViewContent } from '@/lib/metaEvents';
 import SizeChartModal from './SizeChartModal';
 
 export default function PDP({ brand, product }) {
@@ -38,6 +39,16 @@ export default function PDP({ brand, product }) {
   const { addToCart, toggleFavorite, isFavorite } = useCart();
   const { t } = useI18n();
   const { setActiveProduct } = usePageContext();
+
+  // Tells Meta which garment was looked at, which is what lets it find people
+  // who look at garments like it rather than people who like posts.
+  useEffect(() => {
+    trackViewContent({
+      id: product.id ?? product.slug,
+      title: product.title,
+      price: parseInt(String(product.price).replace(/,/g, ''), 10),
+    });
+  }, [product.id, product.slug, product.title, product.price]);
 
   const uid = useId();
   const sizeLabelId = `${uid}-size`;

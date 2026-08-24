@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ChatFAB from '@/components/ChatFAB';
 import CartDrawer from '@/components/CartDrawer';
+import MetaPixel from '@/components/MetaPixel';
 import { CartProvider } from '@/lib/cartContext';
 import { AuthProvider } from '@/lib/authContext';
 import { I18nProvider } from '@/lib/i18n';
@@ -30,6 +31,7 @@ export default function BrandLayout({ children, params }) {
         <CartProvider brandId={brand.id}>
           <PageContextProvider>
             <AnnouncerProvider>
+              <MetaPixel />
               <div data-brand={brand.id} className="brand-root">
                 {/* Every page repeats the header and its nav; this gives
                     keyboard and switch users one keystroke past it. */}
