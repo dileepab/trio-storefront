@@ -3465,3 +3465,35 @@ button {
   padding: 0 var(--sp-4) var(--sp-4);
   color: var(--brand-fg-2);
 }
+
+/* Delivery details on checkout. Asked in the drawer because sending the
+   shopper to another page to type an address is where carts are abandoned.
+   The inputs carry .form-input, so they match every other field on the site. */
+.cart-drawer-details {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.cart-drawer-details .form-input {
+  width: 100%;
+}
+
+.cart-drawer-details .form-input:disabled {
+  opacity: 0.6;
+}
+
+.cart-drawer-error {
+  font-size: 13px;
+  color: var(--status-error);
+  background: color-mix(in srgb, var(--status-error) 10%, transparent);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--status-error);
+  margin: 0 0 10px;
+}
+
+.cart-drawer-checkout:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
