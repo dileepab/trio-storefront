@@ -2728,21 +2728,71 @@ button {
 }
 
 /* ===== Language Picker Selector ===== */
+/* ===== Language picker =====
+   Sits beside the round icon buttons, so it is shaped like them rather than
+   like a form field: a pill that is invisible until you reach for it. The
+   native chevron is replaced because its size and colour are the browser's
+   to choose, and it never matched. */
+/* No `display` here on purpose. This element also carries .sf-desktop-only,
+   which hides it below 900px — and an equally specific `display` declared
+   later in the file would quietly beat it, putting a second language picker
+   on every phone. */
+.lang-picker-wrap {
+  position: relative;
+}
+
+.lang-picker-wrap::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 6px;
+  height: 6px;
+  /* Half the box, less the extra the rotation adds below the centre. */
+  margin-top: -5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .lang-picker {
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--brand-border-strong);
-  background: var(--brand-surface-2);
+  appearance: none;
+  -webkit-appearance: none;
+  height: 40px;
+  /* Right padding clears the chevron; 13px because Sinhala and Tamil need
+     more height than Latin to stay legible. */
+  padding: 0 28px 0 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--brand-text);
-  font-size: 11px;
+  font: inherit;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   outline: none;
-  transition: border-color var(--dur-base) var(--ease-out);
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 .lang-picker:hover {
+  background: var(--brand-surface-2);
+}
+
+/* Keyboard users need to see focus; a mouse click should not draw a ring. */
+.lang-picker:focus-visible {
   border-color: var(--brand-primary);
+  background: var(--brand-surface-2);
+}
+
+/* The list itself is drawn by the OS and inherits nothing, so the options
+   need their own colours or they render white-on-white in some browsers. */
+.lang-picker option {
+  background: var(--brand-surface-1);
+  color: var(--brand-text);
+  font-size: 14px;
 }
 
 /* ===== Lookbook page ===== */
@@ -3309,9 +3359,18 @@ button {
   color: var(--brand-primary);
 }
 
+/* In the drawer this is a labelled field in a form, not a control tucked
+   beside icons, so it keeps a visible edge and the platform's own arrow —
+   there is no wrapper here to draw a chevron. */
 .mobile-drawer-lang {
   width: 100%;
   height: var(--tap-min);
+  appearance: auto;
+  -webkit-appearance: menulist;
+  padding: 0 12px;
+  border: 1px solid var(--brand-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--brand-surface-2);
 }
 
 .mobile-drawer-account {
