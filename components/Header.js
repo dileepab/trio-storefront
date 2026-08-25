@@ -71,12 +71,11 @@ export default function Header({ brand, basePath }) {
         <img src={brand.logo} alt={brand.name}/>
       </Link>
       
+      {/* The lookbook holds a single look, and this was the most prominent
+          link on the page — including on the product page an ad lands on,
+          where the brightest thing in view pointed away from the sale. The
+          page still exists at /lookbook. */}
       <nav className="sf-nav sf-desktop-only" aria-label={formatText('Primary')}>
-        {/* Lookbook active tag */}
-        <Link href={storefrontHref(basePath, '/lookbook')} className="sf-nav-featured">
-          ✨ {t('Shop the Look', brand.id)}
-        </Link>
-        <span className="sf-nav-sep" aria-hidden="true"/>
         {brand.nav.map(n => (
           <Link key={n} href={storefrontHref(basePath, '/shop')}>{t(n, brand.id)}</Link>
         ))}
@@ -189,13 +188,6 @@ export default function Header({ brand, basePath }) {
                   {formatText('Categories')}
                 </h2>
                 <nav className="mobile-drawer-nav" aria-label={formatText('Categories')}>
-                  <Link
-                    href={storefrontHref(basePath, '/lookbook')}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="mobile-drawer-featured"
-                  >
-                    ✨ {t('Shop the Look', brand.id)}
-                  </Link>
                   {brand.nav.map(n => (
                     <Link
                       key={n}
