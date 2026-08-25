@@ -82,19 +82,22 @@ export default function Header({ brand, basePath }) {
       </nav>
 
       <div className="sf-header-actions">
-        {/* Language Picker Dropdown (Desktop Only in Header) */}
-        <select
-          value={locale}
-          onChange={(e) => changeLocale(e.target.value)}
-          className="lang-picker sf-desktop-only"
-          aria-label="Select language"
-        >
-          <option value="en">EN</option>
-          <option value="si">සිංහල</option>
-          <option value="ta">தமிழ்</option>
-        </select>
+        {/* Kept a native select: it opens the platform's own picker on a
+            phone, which is where most of these shoppers are. The wrapper
+            exists only to draw a chevron that inherits the text colour. */}
+        <span className="lang-picker-wrap sf-desktop-only">
+          <select
+            value={locale}
+            onChange={(e) => changeLocale(e.target.value)}
+            className="lang-picker"
+            aria-label="Select language"
+          >
+            <option value="en">English</option>
+            <option value="si">සිංහල</option>
+            <option value="ta">தமிழ்</option>
+          </select>
+        </span>
 
-        <button className="icon-btn" aria-label="Search"><Icon name="search"/></button>
 
         {/* Account Button with user initials avatar badge */}
         <button
